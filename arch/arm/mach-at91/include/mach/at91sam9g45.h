@@ -107,7 +107,7 @@
 #define AT91_SHDWC	(0xfffffd10 - AT91_BASE_SYS)
 #define AT91SAM9G45_RTT		(0xfffffd20 - AT91_BASE_SYS)
 #define AT91_PIT	(0xfffffd30 - AT91_BASE_SYS)
-#define AT91_WDT	(0xfffffd40 - AT91_BASE_SYS)
+#define AT91SAM9G45_WDT	(0xfffffd40 - AT91_BASE_SYS)
 #define AT91_GPBR	(0xfffffd60 - AT91_BASE_SYS)
 #define AT91SAM9G45_RTC		(0xfffffdb0 - AT91_BASE_SYS)
 

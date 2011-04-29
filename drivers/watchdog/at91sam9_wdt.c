@@ -67,6 +67,7 @@ static struct {
 	unsigned long open;
 	char expect_close;
 	struct timer_list timer;	/* The timer that pings the watchdog */
+	void __iomem *regbase;		/* base address of WDT */
 } at91wdt_private;
 
 /* ......................................................................... */
@@ -77,7 +78,8 @@ static struct {
  */
 static inline void at91_wdt_reset(void)
 {
-	at91_sys_write(AT91_WDT_CR, AT91_WDT_KEY | AT91_WDT_WDRSTT);
+	__raw_writel(AT91_WDT_KEY | AT91_WDT_WDRSTT,
+		at91wdt_private.regbase + AT91_WDT_CR);
 }
 
 /*
@@ -132,7 +134,7 @@ static int at91_wdt_settimeout(unsigned int timeout)
 	unsigned int mr;
 
 	/* Check if disabled */
-	mr = at91_sys_read(AT91_WDT_MR);
+	mr = __raw_readl(at91wdt_private.regbase + AT91_WDT_MR);
 	if (mr & AT91_WDT_WDDIS) {
 		printk(KERN_ERR DRV_NAME": sorry, watchdog is disabled\n");
 		return -EIO;
@@ -149,7 +151,7 @@ static int at91_wdt_settimeout(unsigned int timeout)
 		| AT91_WDT_WDDBGHLT	/* disabled in debug mode */
 		| AT91_WDT_WDD		/* restart at any time */
 		| (timeout & AT91_WDT_WDV);  /* timer value */
-	at91_sys_write(AT91_WDT_MR, reg);
+	__raw_writel(reg, at91wdt_private.regbase + AT91_WDT_MR);
 
 	return 0;
 }
@@ -248,11 +250,17 @@ static struct miscdevice at91wdt_miscdev = {
 
 static int __init at91wdt_probe(struct platform_device *pdev)
 {
+	struct resource	*r;
 	int res;
+
+	r = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	if (!r)
+		return -ENODEV;
 
 	if (at91wdt_miscdev.parent)
 		return -EBUSY;
 	at91wdt_miscdev.parent = &pdev->dev;
+	at91wdt_private.regbase = (void __force __iomem *) r->start;
 
 	/* Set watchdog */
 	res = at91_wdt_settimeout(ms_to_ticks(WDT_HW_TIMEOUT * 1000));
