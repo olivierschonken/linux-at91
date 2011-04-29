@@ -279,15 +279,15 @@ static void __init at572d940hf_register_clocks(void)
 static struct at91_gpio_bank at572d940hf_gpio[] = {
 	{
 		.id		= AT572D940HF_ID_PIOA,
-		.offset		= AT91_PIOA,
+		.regbase	= (void __iomem *)AT91_VA_BASE_SYS + AT572D940HF_PIOA,
 		.clock		= &pioA_clk,
 	}, {
 		.id		= AT572D940HF_ID_PIOB,
-		.offset		= AT91_PIOB,
+		.regbase	= (void __iomem *)AT91_VA_BASE_SYS + AT572D940HF_PIOB,
 		.clock		= &pioB_clk,
 	}, {
 		.id		= AT572D940HF_ID_PIOC,
-		.offset		= AT91_PIOC,
+		.regbase	= (void __iomem *)AT91_VA_BASE_SYS + AT572D940HF_PIOC,
 		.clock		= &pioC_clk,
 	}
 };

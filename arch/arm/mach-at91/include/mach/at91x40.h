@@ -39,7 +39,7 @@
 #define AT91_USART1	(0xfffcc000 - AT91_BASE_SYS)	/* USART 1 */
 #define AT91_USART0	(0xfffd0000 - AT91_BASE_SYS)	/* USART 0 */
 #define AT91_TC		(0xfffe0000 - AT91_BASE_SYS)	/* Timer Counter */
-#define AT91_PIOA	(0xffff0000 - AT91_BASE_SYS)	/* PIO Controller A */
+#define AT91X40_PIOA	(0xffff0000 - AT91_BASE_SYS)	/* PIO Controller A */
 #define AT91_PS		(0xffff4000 - AT91_BASE_SYS)	/* Power Save */
 #define AT91_WD		(0xffff8000 - AT91_BASE_SYS)	/* Watchdog Timer */
 #define AT91_AIC	(0xfffff000 - AT91_BASE_SYS)	/* Advanced Interrupt Controller */

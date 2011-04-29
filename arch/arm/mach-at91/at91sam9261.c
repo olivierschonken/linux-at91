@@ -244,15 +244,15 @@ static void __init at91sam9261_register_clocks(void)
 static struct at91_gpio_bank at91sam9261_gpio[] = {
 	{
 		.id		= AT91SAM9261_ID_PIOA,
-		.offset		= AT91_PIOA,
+		.regbase	= (void __iomem *)AT91_VA_BASE_SYS + AT91SAM9261_PIOA,
 		.clock		= &pioA_clk,
 	}, {
 		.id		= AT91SAM9261_ID_PIOB,
-		.offset		= AT91_PIOB,
+		.regbase	= (void __iomem *)AT91_VA_BASE_SYS + AT91SAM9261_PIOB,
 		.clock		= &pioB_clk,
 	}, {
 		.id		= AT91SAM9261_ID_PIOC,
-		.offset		= AT91_PIOC,
+		.regbase	= (void __iomem *)AT91_VA_BASE_SYS + AT91SAM9261_PIOC,
 		.clock		= &pioC_clk,
 	}
 };

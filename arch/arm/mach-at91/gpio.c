@@ -32,7 +32,6 @@ struct at91_gpio_chip {
 	struct gpio_chip	chip;
 	struct at91_gpio_chip	*next;		/* Bank sharing same clock */
 	struct at91_gpio_bank	*bank;		/* Bank definition */
-	void __iomem		*regbase;	/* Base of register bank */
 };
 
 #define to_at91_gpio_chip(c) container_of(c, struct at91_gpio_chip, chip)
@@ -74,7 +73,7 @@ static inline void __iomem *pin_to_controller(unsigned pin)
 	pin -= PIN_BASE;
 	pin /= 32;
 	if (likely(pin < gpio_banks))
-		return gpio_chip[pin].regbase;
+		return gpio_chip[pin].bank->regbase;
 
 	return NULL;
 }
@@ -297,7 +296,7 @@ void at91_gpio_suspend(void)
 	int i;
 
 	for (i = 0; i < gpio_banks; i++) {
-		void __iomem	*pio = gpio_chip[i].regbase;
+		void __iomem	*pio = gpio_chip[i].bank->regbase;
 
 		backups[i] = __raw_readl(pio + PIO_IMR);
 		__raw_writel(backups[i], pio + PIO_IDR);
@@ -318,7 +317,7 @@ void at91_gpio_resume(void)
 	int i;
 
 	for (i = 0; i < gpio_banks; i++) {
-		void __iomem	*pio = gpio_chip[i].regbase;
+		void __iomem	*pio = gpio_chip[i].bank->regbase;
 
 		if (!wakeups[i])
 			clk_enable(gpio_chip[i].bank->clock);
@@ -388,7 +387,7 @@ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
 	struct irq_data *idata = irq_desc_get_irq_data(desc);
 	struct irq_chip *chip = irq_data_get_irq_chip(idata);
 	struct at91_gpio_chip *at91_gpio = irq_data_get_irq_chip_data(idata);
-	void __iomem	*pio = at91_gpio->regbase;
+	void __iomem	*pio = at91_gpio->bank->regbase;
 	u32		isr;
 
 	for (;;) {
@@ -401,7 +400,7 @@ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
 			if (!at91_gpio->next)
 				break;
 			at91_gpio = at91_gpio->next;
-			pio = at91_gpio->regbase;
+			pio = at91_gpio->bank->regbase;
 			continue;
 		}
 
@@ -500,7 +499,7 @@ void __init at91_gpio_irq_setup(void)
 		unsigned	id = this->bank->id;
 		unsigned	i;
 
-		__raw_writel(~0, this->regbase + PIO_IDR);
+		__raw_writel(~0, this->bank->regbase + PIO_IDR);
 
 		for (i = 0, pin = this->chip.base; i < 32; i++, pin++) {
 			irq_set_lockdep_class(pin, &gpio_lock_class);
@@ -532,7 +531,7 @@ static int at91_gpiolib_direction_input(struct gpio_chip *chip,
 					unsigned offset)
 {
 	struct at91_gpio_chip *at91_gpio = to_at91_gpio_chip(chip);
-	void __iomem *pio = at91_gpio->regbase;
+	void __iomem *pio = at91_gpio->bank->regbase;
 	unsigned mask = 1 << offset;
 
 	__raw_writel(mask, pio + PIO_ODR);
@@ -543,7 +542,7 @@ static int at91_gpiolib_direction_output(struct gpio_chip *chip,
 					 unsigned offset, int val)
 {
 	struct at91_gpio_chip *at91_gpio = to_at91_gpio_chip(chip);
-	void __iomem *pio = at91_gpio->regbase;
+	void __iomem *pio = at91_gpio->bank->regbase;
 	unsigned mask = 1 << offset;
 
 	__raw_writel(mask, pio + (val ? PIO_SODR : PIO_CODR));
@@ -554,7 +553,7 @@ static int at91_gpiolib_direction_output(struct gpio_chip *chip,
 static int at91_gpiolib_get(struct gpio_chip *chip, unsigned offset)
 {
 	struct at91_gpio_chip *at91_gpio = to_at91_gpio_chip(chip);
-	void __iomem *pio = at91_gpio->regbase;
+	void __iomem *pio = at91_gpio->bank->regbase;
 	unsigned mask = 1 << offset;
 	u32 pdsr;
 
@@ -565,7 +564,7 @@ static int at91_gpiolib_get(struct gpio_chip *chip, unsigned offset)
 static void at91_gpiolib_set(struct gpio_chip *chip, unsigned offset, int val)
 {
 	struct at91_gpio_chip *at91_gpio = to_at91_gpio_chip(chip);
-	void __iomem *pio = at91_gpio->regbase;
+	void __iomem *pio = at91_gpio->bank->regbase;
 	unsigned mask = 1 << offset;
 
 	__raw_writel(mask, pio + (val ? PIO_SODR : PIO_CODR));
@@ -614,8 +613,6 @@ void __init at91_gpio_init(struct at91_gpio_bank *data, int nr_banks)
 
 		at91_gpio->bank = &data[i];
 		at91_gpio->chip.base = PIN_BASE + i * 32;
-		at91_gpio->regbase = at91_gpio->bank->offset +
-			(void __iomem *)AT91_VA_BASE_SYS;
 
 		/* enable PIO controller's clock */
 		clk_enable(at91_gpio->bank->clock);

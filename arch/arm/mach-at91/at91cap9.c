@@ -271,19 +271,19 @@ static void __init at91cap9_register_clocks(void)
 static struct at91_gpio_bank at91cap9_gpio[] = {
 	{
 		.id		= AT91CAP9_ID_PIOABCD,
-		.offset		= AT91_PIOA,
+		.regbase	= (void __iomem *)AT91_VA_BASE_SYS + AT91CAP9_PIOA,
 		.clock		= &pioABCD_clk,
 	}, {
 		.id		= AT91CAP9_ID_PIOABCD,
-		.offset		= AT91_PIOB,
+		.regbase	= (void __iomem *)AT91_VA_BASE_SYS + AT91CAP9_PIOB,
 		.clock		= &pioABCD_clk,
 	}, {
 		.id		= AT91CAP9_ID_PIOABCD,
-		.offset		= AT91_PIOC,
+		.regbase	= (void __iomem *)AT91_VA_BASE_SYS + AT91CAP9_PIOC,
 		.clock		= &pioABCD_clk,
 	}, {
 		.id		= AT91CAP9_ID_PIOABCD,
-		.offset		= AT91_PIOD,
+		.regbase	= (void __iomem *)AT91_VA_BASE_SYS + AT91CAP9_PIOD,
 		.clock		= &pioABCD_clk,
 	}
 };
