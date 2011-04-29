@@ -1015,10 +1015,19 @@ static void __init at91_add_device_tc(void) { }
  * -------------------------------------------------------------------- */
 
 #if defined(CONFIG_RTC_DRV_AT91RM9200) || defined(CONFIG_RTC_DRV_AT91RM9200_MODULE)
+static struct resource rtc_resources[] = {
+	[0] = {
+		.start	= AT91_VA_BASE_SYS + AT91SAM9G45_RTC,
+		.end	= AT91_VA_BASE_SYS + AT91SAM9G45_RTC + SZ_256 - 1,
+		.flags	= IORESOURCE_MEM,
+	}
+};
+
 static struct platform_device at91sam9g45_rtc_device = {
 	.name		= "at91_rtc",
 	.id		= -1,
-	.num_resources	= 0,
+	.resource	= rtc_resources,
+	.num_resources	= ARRAY_SIZE(rtc_resources),
 };
 
 static void __init at91_add_device_rtc(void)
@@ -1087,8 +1096,8 @@ void __init at91_add_device_tsadcc(struct at91_tsadcc_data *data) {}
 
 static struct resource rtt_resources[] = {
 	{
-		.start	= AT91_BASE_SYS + AT91_RTT,
-		.end	= AT91_BASE_SYS + AT91_RTT + SZ_16 - 1,
+		.start	= AT91_VA_BASE_SYS + AT91SAM9G45_RTT,
+		.end	= AT91_VA_BASE_SYS + AT91SAM9G45_RTT + SZ_16 - 1,
 		.flags	= IORESOURCE_MEM,
 	}
 };
