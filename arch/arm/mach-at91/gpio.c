@@ -391,8 +391,6 @@ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
 	void __iomem	*pio = at91_gpio->regbase;
 	u32		isr;
 
-	/* temporarily mask (level sensitive) parent IRQ */
-	chip->irq_ack(idata);
 	for (;;) {
 		/* Reading ISR acks pending (edge triggered) GPIO interrupts.
 		 * When there none are pending, we're finished unless we need
@@ -416,8 +414,8 @@ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
 			isr >>= 1;
 		}
 	}
-	chip->irq_unmask(idata);
-	/* now it may re-trigger */
+	/* acknowledge interrupt - now it may re-trigger */
+	chip->irq_eoi(idata);
 }
 
 /*--------------------------------------------------------------------------*/

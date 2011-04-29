@@ -46,6 +46,12 @@ static void at91_aic_unmask_irq(struct irq_data *d)
 	at91_sys_write(AT91_AIC_IECR, 1 << d->irq);
 }
 
+static void at91_aic_eoi(struct irq_data *d)
+{
+	/* Acknowledge with AIC after interrupt has been handled */
+	at91_sys_write(AT91_AIC_EOICR, 0);	
+}
+
 unsigned int at91_extern_irq;
 
 #define is_extern_irq(irq) ((1 << (irq)) & at91_extern_irq)
@@ -122,6 +128,7 @@ static struct irq_chip at91_aic_chip = {
 	.irq_ack	= at91_aic_mask_irq,
 	.irq_mask	= at91_aic_mask_irq,
 	.irq_unmask	= at91_aic_unmask_irq,
+	.irq_eoi	= at91_aic_eoi,
 	.irq_set_type	= at91_aic_set_type,
 	.irq_set_wake	= at91_aic_set_wake,
 };
@@ -143,7 +150,7 @@ void __init at91_aic_init(unsigned int priority[NR_AIC_IRQS])
 		/* Active Low interrupt, with the specified priority */
 		at91_sys_write(AT91_AIC_SMR(i), AT91_AIC_SRCTYPE_LOW | priority[i]);
 
-		irq_set_chip_and_handler(i, &at91_aic_chip, handle_level_irq);
+		irq_set_chip_and_handler(i, &at91_aic_chip, handle_fasteoi_irq);
 		set_irq_flags(i, IRQF_VALID | IRQF_PROBE);
 
 		/* Perform 8 End Of Interrupt Command to make sure AIC will not Lock out nIRQ */
