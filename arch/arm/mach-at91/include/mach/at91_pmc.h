@@ -126,7 +126,7 @@
 #define	AT91_PMC_IMR		(AT91_PMC + 0x6c)	/* Interrupt Mask Register */
 
 #define AT91_PMC_PROT		(AT91_PMC + 0xe4)	/* Protect Register [AT91CAP9 revC only] */
-#define		AT91_PMC_PROTKEY	0x504d4301	/* Activation Code */
+#define		AT91_PMC_PROTKEY	0x504d4301		/* Activation Code */
 
 #define AT91_PMC_VER		(AT91_PMC + 0xfc)	/* PMC Module Version [AT91CAP9 only] */
 

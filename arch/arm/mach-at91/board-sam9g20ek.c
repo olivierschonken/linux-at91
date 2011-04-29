@@ -146,9 +146,9 @@ static void __init ek_add_device_macb(void)
  */
 static struct mtd_partition __initdata ek_nand_partition[] = {
 	{
-		.name   = "Bootstrap",
-		.offset = 0,
-		.size   = 4 * SZ_1M,
+		.name	= "Bootstrap",
+		.offset	= 0,
+		.size	= 4 * SZ_1M,
 	},
 	{
 		.name	= "Partition 1",
@@ -365,12 +365,12 @@ static void __init ek_add_regulators(void) {}
 
 
 static struct i2c_board_info __initdata ek_i2c_devices[] = {
-        {
-                I2C_BOARD_INFO("24c512", 0x50)
-        },
-        {
-                I2C_BOARD_INFO("wm8731", 0x1b)
-        },
+	{
+		I2C_BOARD_INFO("24c512", 0x50)
+	},
+	{
+		I2C_BOARD_INFO("wm8731", 0x1b)
+	},
 };
 
 

@@ -109,7 +109,7 @@ static inline unsigned long at91cap9_rev_identify(void)
 #endif
 
 #ifdef CONFIG_ARCH_AT91SAM9G10
-#define cpu_is_at91sam9g10()	((at91_cpu_identify() & ~AT91_CIDR_EXT)	== ARCH_ID_AT91SAM9G10)
+#define cpu_is_at91sam9g10()	((at91_cpu_identify() & ~AT91_CIDR_EXT) == ARCH_ID_AT91SAM9G10)
 #else
 #define cpu_is_at91sam9g10()	(0)
 #endif
@@ -129,12 +129,12 @@ static inline unsigned long at91cap9_rev_identify(void)
 #ifdef CONFIG_ARCH_AT91SAM9G45
 #define cpu_is_at91sam9g45()	(at91_cpu_identify() == ARCH_ID_AT91SAM9G45)
 #define cpu_is_at91sam9g45es()	(at91_cpu_fully_identify() == ARCH_ID_AT91SAM9G45ES)
-#define cpu_is_at91sam9m10()    (cpu_is_at91sam9g45() && \
-                                (at91_exid_identify() == ARCH_EXID_AT91SAM9M10))
-#define cpu_is_at91sam9m46()    (cpu_is_at91sam9g45() && \
-                                (at91_exid_identify() == ARCH_EXID_AT91SAM9G46))
-#define cpu_is_at91sam9m11()    (cpu_is_at91sam9g45() && \
-                                (at91_exid_identify() == ARCH_EXID_AT91SAM9M11))
+#define cpu_is_at91sam9m10()	(cpu_is_at91sam9g45() && \
+				(at91_exid_identify() == ARCH_EXID_AT91SAM9M10))
+#define cpu_is_at91sam9m46()	(cpu_is_at91sam9g45() && \
+				(at91_exid_identify() == ARCH_EXID_AT91SAM9G46))
+#define cpu_is_at91sam9m11()	(cpu_is_at91sam9g45() && \
+				(at91_exid_identify() == ARCH_EXID_AT91SAM9M11))
 #else
 #define cpu_is_at91sam9g45()	(0)
 #define cpu_is_at91sam9g45es()	(0)
@@ -154,9 +154,9 @@ static inline unsigned long at91cap9_rev_identify(void)
 #endif
 
 #ifdef CONFIG_ARCH_AT572D940HF
-#define cpu_is_at572d940hf() (at91_cpu_identify() == ARCH_ID_AT572D940HF)
+#define cpu_is_at572d940hf()	(at91_cpu_identify() == ARCH_ID_AT572D940HF)
 #else
-#define cpu_is_at572d940hf() (0)
+#define cpu_is_at572d940hf()	(0)
 #endif
 
 /*
