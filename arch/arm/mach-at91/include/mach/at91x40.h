@@ -35,13 +35,13 @@
 #define AT91_BASE_SYS	0xffc00000
 
 #define AT91_EBI	(0xffe00000 - AT91_BASE_SYS)	/* External Bus Interface */
-#define AT91_SF		(0xfff00000 - AT91_BASE_SYS)	/* Special Function */
+#define AT91X40_SF	(0xfff00000 - AT91_BASE_SYS)	/* Special Function */
 #define AT91_USART1	(0xfffcc000 - AT91_BASE_SYS)	/* USART 1 */
 #define AT91_USART0	(0xfffd0000 - AT91_BASE_SYS)	/* USART 0 */
 #define AT91_TC		(0xfffe0000 - AT91_BASE_SYS)	/* Timer Counter */
 #define AT91X40_PIOA	(0xffff0000 - AT91_BASE_SYS)	/* PIO Controller A */
-#define AT91_PS		(0xffff4000 - AT91_BASE_SYS)	/* Power Save */
-#define AT91_WD		(0xffff8000 - AT91_BASE_SYS)	/* Watchdog Timer */
+#define AT91X40_PS	(0xffff4000 - AT91_BASE_SYS)	/* Power Save */
+#define AT91X40_WD	(0xffff8000 - AT91_BASE_SYS)	/* Watchdog Timer */
 #define AT91_AIC	(0xfffff000 - AT91_BASE_SYS)	/* Advanced Interrupt Controller */
 
 /*
@@ -49,13 +49,13 @@
  * But it does have a chip identify register and extension ID, so define at
  * least these here.
  */
-#define AT91_DBGU_CIDR	(AT91_SF + 0)	/* CIDR in PS segment */
-#define AT91_DBGU_EXID	(AT91_SF + 4)	/* EXID in PS segment */
+#define AT91_DBGU_CIDR	(AT91X40_SF + 0)	/* CIDR in PS segment */
+#define AT91_DBGU_EXID	(AT91X40_SF + 4)	/* EXID in PS segment */
 
 /*
  * Support defines for the simple Power Controller module.
  */
-#define	AT91_PS_CR	(AT91_PS + 0)	/* PS Control register */
-#define	AT91_PS_CR_CPU	(1 << 0)	/* CPU clock disable bit */
+#define	AT91_PS_CR	(AT91X40_PS + 0)	/* PS Control register */
+#define	AT91_PS_CR_CPU		(1 << 0)		/* CPU clock disable bit */
 
 #endif /* AT91X40_H */

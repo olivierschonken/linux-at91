@@ -469,8 +469,8 @@ static struct resource nand_resources[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= AT91_BASE_SYS + AT91_ECC0,
-		.end	= AT91_BASE_SYS + AT91_ECC0 + SZ_512 - 1,
+		.start	= AT91_BASE_SYS + AT91SAM9263_ECC0,
+		.end	= AT91_BASE_SYS + AT91SAM9263_ECC0 + SZ_512 - 1,
 		.flags	= IORESOURCE_MEM,
 	}
 };

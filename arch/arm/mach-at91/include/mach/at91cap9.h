@@ -82,13 +82,13 @@
 /*
  * System Peripherals (offset from AT91_BASE_SYS)
  */
-#define AT91_ECC	(0xffffe200 - AT91_BASE_SYS)
-#define AT91_BCRAMC	(0xffffe400 - AT91_BASE_SYS)
+#define AT91CAP9_ECC	(0xffffe200 - AT91_BASE_SYS)
+#define AT91CAP9_BCRAMC	(0xffffe400 - AT91_BASE_SYS)
 #define AT91_DDRSDRC0	(0xffffe600 - AT91_BASE_SYS)
 #define AT91_SMC	(0xffffe800 - AT91_BASE_SYS)
 #define AT91_MATRIX	(0xffffea00 - AT91_BASE_SYS)
-#define AT91_CCFG	(0xffffeb10 - AT91_BASE_SYS)
-#define AT91_DMA	(0xffffec00 - AT91_BASE_SYS)
+#define AT91CAP9_CCFG	(0xffffeb10 - AT91_BASE_SYS)
+#define AT91CAP9_DMA	(0xffffec00 - AT91_BASE_SYS)
 #define AT91_DBGU	(0xffffee00 - AT91_BASE_SYS)
 #define AT91_AIC	(0xfffff000 - AT91_BASE_SYS)
 #define AT91CAP9_PIOA	(0xfffff200 - AT91_BASE_SYS)
