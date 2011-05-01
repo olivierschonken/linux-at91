@@ -209,14 +209,14 @@ static int at91_pm_enter(suspend_state_t state)
 	at91_gpio_suspend();
 	at91_irq_suspend();
 
-	pr_debug("AT91: PM - wake mask %08x, pm state %d\n",
-			/* remember all the always-wake irqs */
-			(at91_sys_read(AT91_PMC_PCSR)
-					| (1 << AT91_ID_FIQ)
-					| (1 << AT91_ID_SYS)
-					| (at91_extern_irq))
-				& at91_sys_read(AT91_AIC_IMR),
-			state);
+//	pr_debug("AT91: PM - wake mask %08x, pm state %d\n",
+//			/* remember all the always-wake irqs */
+//			(at91_sys_read(AT91_PMC_PCSR)
+//					| (1 << AT91_ID_FIQ)
+//					| (1 << AT91_ID_SYS)
+//					| (at91_extern_irq))
+//				& at91_sys_read(AT91_AIC_IMR),
+//			state);
 
 	switch (state) {
 		/*
@@ -282,8 +282,8 @@ static int at91_pm_enter(suspend_state_t state)
 			goto error;
 	}
 
-	pr_debug("AT91: PM - wakeup %08x\n",
-			at91_sys_read(AT91_AIC_IPR) & at91_sys_read(AT91_AIC_IMR));
+//	pr_debug("AT91: PM - wakeup %08x\n",
+//			at91_sys_read(AT91_AIC_IPR) & at91_sys_read(AT91_AIC_IMR));
 
 error:
 	target_state = PM_SUSPEND_ON;

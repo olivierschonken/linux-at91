@@ -29,7 +29,7 @@ extern void __init at91sam9g45_init_interrupts(unsigned int priority[]);
 extern void __init at91x40_init_interrupts(unsigned int priority[]);
 extern void __init at91cap9_init_interrupts(unsigned int priority[]);
 extern void __init at572d940hf_init_interrupts(unsigned int priority[]);
-extern void __init at91_aic_init(unsigned int priority[]);
+extern void __init at91_aic_init(void __iomem* regbase, unsigned int priority[]);
 
  /* Timer */
 struct sys_timer;

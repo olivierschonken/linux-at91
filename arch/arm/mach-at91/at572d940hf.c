@@ -365,11 +365,13 @@ static unsigned int at572d940hf_default_irq_priority[NR_AIC_IRQS] __initdata = {
 
 void __init at572d940hf_init_interrupts(unsigned int priority[NR_AIC_IRQS])
 {
+	void __iomem* aic = (void __iomem *)AT91_VA_BASE_SYS + AT572D940HF_AIC;
+
 	if (!priority)
 		priority = at572d940hf_default_irq_priority;
 
 	/* Initialize the AIC interrupt controller */
-	at91_aic_init(priority);
+	at91_aic_init(aic, priority);
 
 	/* Enable GPIO interrupts */
 	at91_gpio_irq_setup();

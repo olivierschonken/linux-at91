@@ -42,7 +42,7 @@
 #define AT91X40_PIOA	(0xffff0000 - AT91_BASE_SYS)	/* PIO Controller A */
 #define AT91X40_PS	(0xffff4000 - AT91_BASE_SYS)	/* Power Save */
 #define AT91X40_WD	(0xffff8000 - AT91_BASE_SYS)	/* Watchdog Timer */
-#define AT91_AIC	(0xfffff000 - AT91_BASE_SYS)	/* Advanced Interrupt Controller */
+#define AT91X40_AIC	(0xfffff000 - AT91_BASE_SYS)	/* Advanced Interrupt Controller */
 
 /*
  * The AT91x40 series doesn't have a debug unit like the other AT91 parts.

@@ -78,7 +78,7 @@
 #define AT91_SMC	(0xffffec00 - AT91_BASE_SYS)
 #define AT91_MATRIX	(0xffffee00 - AT91_BASE_SYS)
 #define AT91SAM9RL_CCFG		(0xffffef10 - AT91_BASE_SYS)
-#define AT91_AIC	(0xfffff000 - AT91_BASE_SYS)
+#define AT91SAM9RL_AIC		(0xfffff000 - AT91_BASE_SYS)
 #define AT91SAM9RL_DBGU		(0xfffff200 - AT91_BASE_SYS)
 #define AT91SAM9RL_PIOA		(0xfffff400 - AT91_BASE_SYS)
 #define AT91SAM9RL_PIOB		(0xfffff600 - AT91_BASE_SYS)

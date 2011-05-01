@@ -75,9 +75,11 @@ static unsigned int at91x40_default_irq_priority[NR_AIC_IRQS] __initdata = {
 
 void __init at91x40_init_interrupts(unsigned int priority[NR_AIC_IRQS])
 {
+	void __iomem* aic = (void __iomem *)AT91_VA_BASE_SYS + AT91X40_AIC;
+
 	if (!priority)
 		priority = at91x40_default_irq_priority;
 
-	at91_aic_init(priority);
+	at91_aic_init(aic, priority);
 }
 

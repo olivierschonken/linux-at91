@@ -28,6 +28,7 @@
 #include <linux/ioctl.h>
 #include <linux/completion.h>
 #include <linux/slab.h>
+#include <linux/io.h>
 
 #include <asm/uaccess.h>
 

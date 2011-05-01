@@ -332,11 +332,13 @@ static unsigned int at91sam9rl_default_irq_priority[NR_AIC_IRQS] __initdata = {
 
 void __init at91sam9rl_init_interrupts(unsigned int priority[NR_AIC_IRQS])
 {
+	void __iomem* aic = (void __iomem *)AT91_VA_BASE_SYS + AT91SAM9RL_AIC;
+
 	if (!priority)
 		priority = at91sam9rl_default_irq_priority;
 
 	/* Initialize the AIC interrupt controller */
-	at91_aic_init(priority);
+	at91_aic_init(aic, priority);
 
 	/* Enable GPIO interrupts */
 	at91_gpio_irq_setup();

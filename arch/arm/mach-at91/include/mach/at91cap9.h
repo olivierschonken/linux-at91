@@ -90,7 +90,7 @@
 #define AT91CAP9_CCFG	(0xffffeb10 - AT91_BASE_SYS)
 #define AT91CAP9_DMA	(0xffffec00 - AT91_BASE_SYS)
 #define AT91CAP9_DBGU	(0xffffee00 - AT91_BASE_SYS)
-#define AT91_AIC	(0xfffff000 - AT91_BASE_SYS)
+#define AT91CAP9_AIC	(0xfffff000 - AT91_BASE_SYS)
 #define AT91CAP9_PIOA	(0xfffff200 - AT91_BASE_SYS)
 #define AT91CAP9_PIOB	(0xfffff400 - AT91_BASE_SYS)
 #define AT91CAP9_PIOC	(0xfffff600 - AT91_BASE_SYS)
