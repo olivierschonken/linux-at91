@@ -291,11 +291,9 @@ static void at91sam9260_poweroff(void)
 
 static void __init at91sam9xe_initialize(void)
 {
-	unsigned long cidr, sram_size;
+	unsigned long sram_size;
 
-	cidr = at91_sys_read(AT91_DBGU_CIDR);
-
-	switch (cidr & AT91_CIDR_SRAMSIZ) {
+	switch (at91_sram_size()) {
 		case AT91_CIDR_SRAMSIZ_32K:
 			sram_size = 2 * SZ_16K;
 			break;

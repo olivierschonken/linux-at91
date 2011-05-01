@@ -1331,8 +1331,8 @@ void __init at91_add_device_ssc(unsigned id, unsigned pins) {}
 #if defined(CONFIG_SERIAL_ATMEL)
 static struct resource dbgu_resources[] = {
 	[0] = {
-		.start	= AT91_VA_BASE_SYS + AT91_DBGU,
-		.end	= AT91_VA_BASE_SYS + AT91_DBGU + SZ_512 - 1,
+		.start	= AT91_VA_BASE_SYS + AT91SAM9G45_DBGU,
+		.end	= AT91_VA_BASE_SYS + AT91SAM9G45_DBGU + SZ_512 - 1,
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
@@ -1345,7 +1345,7 @@ static struct resource dbgu_resources[] = {
 static struct atmel_uart_data dbgu_data = {
 	.use_dma_tx	= 0,
 	.use_dma_rx	= 0,
-	.regs		= (void __iomem *)(AT91_VA_BASE_SYS + AT91_DBGU),
+	.regs		= (void __iomem *)(AT91_VA_BASE_SYS + AT91SAM9G45_DBGU),
 };
 
 static u64 dbgu_dmamask = DMA_BIT_MASK(32);

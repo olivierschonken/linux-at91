@@ -254,14 +254,12 @@ static void at91sam9rl_poweroff(void)
 
 void __init at91sam9rl_initialize(unsigned long main_clock)
 {
-	unsigned long cidr, sram_size;
+	unsigned long sram_size;
 
 	/* Map peripherals */
 	iotable_init(at91sam9rl_io_desc, ARRAY_SIZE(at91sam9rl_io_desc));
 
-	cidr = at91_sys_read(AT91_DBGU_CIDR);
-
-	switch (cidr & AT91_CIDR_SRAMSIZ) {
+	switch (at91_sram_size()) {
 		case AT91_CIDR_SRAMSIZ_32K:
 			sram_size = 2 * SZ_16K;
 			break;

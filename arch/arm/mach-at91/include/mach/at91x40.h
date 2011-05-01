@@ -49,8 +49,9 @@
  * But it does have a chip identify register and extension ID, so define at
  * least these here.
  */
-#define AT91_DBGU_CIDR	(AT91X40_SF + 0)	/* CIDR in PS segment */
-#define AT91_DBGU_EXID	(AT91X40_SF + 4)	/* EXID in PS segment */
+#define AT91_DBGU	AT91X40_SF
+#define AT91_DBGU_CIDR	0x00	/* CIDR in PS segment */
+#define AT91_DBGU_EXID	0x04	/* EXID in PS segment */
 
 /*
  * Support defines for the simple Power Controller module.
