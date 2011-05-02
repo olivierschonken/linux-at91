@@ -511,7 +511,7 @@ postcore_initcall(at91_clk_debugfs_init);
 int at91_clocks_valid_for_suspend(void)
 {
 	unsigned long scsr;
-	int i;
+	struct clk *clk;
 
 	scsr = pmc_readl(AT91_PMC_SCSR);
 
@@ -535,16 +535,18 @@ int at91_clocks_valid_for_suspend(void)
 	}
 
 #ifdef CONFIG_AT91_PROGRAMMABLE_CLOCKS
-	/* PCK0..PCK3 must be disabled, or configured to use clk32k */
-	for (i = 0; i < 4; i++) {
+	/* PCK0..PCKn must be disabled, or configured to use clk32k */
+	list_for_each_entry(clk, &clocks, node) {
 		u32 css;
 
-		if ((scsr & (AT91_PMC_PCK0 << i)) == 0)
+		if (!clk_is_programmable(clk))
+			continue;
+		if ((scsr & clk->pmc_mask) == 0)	/* not enabled */
 			continue;
 
-		css = pmc_readl(AT91_PMC_PCKR(i)) & AT91_PMC_CSS;
+		css = pmc_readl(AT91_PMC_PCKR(clk->id)) & AT91_PMC_CSS;
 		if (css != AT91_PMC_CSS_SLOW) {
-			pr_err("AT91: PM - Suspend-to-RAM with PCK%d src %d\n", i, css);
+			pr_err("AT91: PM - Suspend-to-RAM with PCK%d src %d\n", clk->id, css);
 			return 0;
 		}
 	}
