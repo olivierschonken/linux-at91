@@ -29,6 +29,7 @@
 #include <mach/cpu.h>
 
 #include "generic.h"
+#include "clock.h"
 #include "pm.h"
 
 /*
@@ -130,55 +131,6 @@ static int at91_pm_begin(suspend_state_t state)
 }
 
 /*
- * Verify that all the clocks are correct before entering
- * slow-clock mode.
- */
-static int at91_pm_verify_clocks(void)
-{
-	unsigned long scsr;
-	int i;
-
-	scsr = at91_sys_read(AT91_PMC_SCSR);
-
-	/* USB must not be using PLLB */
-	if (cpu_is_at91rm9200()) {
-		if ((scsr & (AT91RM9200_PMC_UHP | AT91RM9200_PMC_UDP)) != 0) {
-			pr_err("AT91: PM - Suspend-to-RAM with USB still active\n");
-			return 0;
-		}
-	} else if (cpu_is_at91sam9260() || cpu_is_at91sam9261() || cpu_is_at91sam9263()
-			|| cpu_is_at91sam9g20() || cpu_is_at91sam9g10()) {
-		if ((scsr & (AT91SAM926x_PMC_UHP | AT91SAM926x_PMC_UDP)) != 0) {
-			pr_err("AT91: PM - Suspend-to-RAM with USB still active\n");
-			return 0;
-		}
-	} else if (cpu_is_at91cap9()) {
-		if ((scsr & AT91CAP9_PMC_UHP) != 0) {
-			pr_err("AT91: PM - Suspend-to-RAM with USB still active\n");
-			return 0;
-		}
-	}
-
-#ifdef CONFIG_AT91_PROGRAMMABLE_CLOCKS
-	/* PCK0..PCK3 must be disabled, or configured to use clk32k */
-	for (i = 0; i < 4; i++) {
-		u32 css;
-
-		if ((scsr & (AT91_PMC_PCK0 << i)) == 0)
-			continue;
-
-		css = at91_sys_read(AT91_PMC_PCKR(i)) & AT91_PMC_CSS;
-		if (css != AT91_PMC_CSS_SLOW) {
-			pr_err("AT91: PM - Suspend-to-RAM with PCK%d src %d\n", i, css);
-			return 0;
-		}
-	}
-#endif
-
-	return 1;
-}
-
-/*
  * Call this from platform driver suspend() to see how deeply to suspend.
  * For example, some controllers (like OHCI) need one of the PLL clocks
  * in order to act as a wakeup source, and those are not available when
@@ -228,7 +180,7 @@ static int at91_pm_enter(suspend_state_t state)
 			/*
 			 * Ensure that clocks are in a valid state.
 			 */
-			if (!at91_pm_verify_clocks())
+			if (!at91_clocks_valid_for_suspend())
 				goto error;
 
 			/*

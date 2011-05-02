@@ -102,7 +102,7 @@
 #define AT91SAM9G45_PIOC	(0xfffff600 - AT91_BASE_SYS)
 #define AT91SAM9G45_PIOD	(0xfffff800 - AT91_BASE_SYS)
 #define AT91SAM9G45_PIOE	(0xfffffa00 - AT91_BASE_SYS)
-#define AT91_PMC	(0xfffffc00 - AT91_BASE_SYS)
+#define AT91SAM9G45_PMC		(0xfffffc00 - AT91_BASE_SYS)
 #define AT91_RSTC	(0xfffffd00 - AT91_BASE_SYS)
 #define AT91_SHDWC	(0xfffffd10 - AT91_BASE_SYS)
 #define AT91SAM9G45_RTT		(0xfffffd20 - AT91_BASE_SYS)

@@ -24,6 +24,7 @@
 
 #include <linux/module.h>
 
+#include <asm/proc-fns.h>
 #include <asm/mach/irq.h>
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
@@ -292,6 +293,18 @@ static struct at91_gpio_bank at572d940hf_gpio[] = {
 	}
 };
 
+static void at572d940hf_idle(void)
+{
+	void __iomem* pmc = (void __iomem *)AT91_VA_BASE_SYS + AT572D940HF_PMC;
+
+	/*
+	 * Disable the processor clock, and set the processor (CP15)
+	 * into 'Wait for Interrupt' mode.
+	 */
+	__raw_writel(AT91_PMC_PCK, pmc + AT91_PMC_SCDR);
+	cpu_do_idle();
+}
+
 static void at572d940hf_reset(void)
 {
 	at91_sys_write(AT91_RSTC_CR, AT91_RSTC_KEY | AT91_RSTC_PROCRST | AT91_RSTC_PERRST);
@@ -304,15 +317,18 @@ static void at572d940hf_reset(void)
 
 void __init at572d940hf_initialize(unsigned long main_clock)
 {
+	void __iomem* pmc = (void __iomem *)AT91_VA_BASE_SYS + AT572D940HF_PMC;
+
 	/* Map peripherals */
 	iotable_init(at572d940hf_io_desc, ARRAY_SIZE(at572d940hf_io_desc));
 
+	at91_arch_idle = at572d940hf_idle;
 	at91_arch_reset = at572d940hf_reset;
 	at91_extern_irq = (1 << AT572D940HF_ID_IRQ0) | (1 << AT572D940HF_ID_IRQ1)
 			| (1 << AT572D940HF_ID_IRQ2);
 
 	/* Init clock subsystem */
-	at91_clock_init(main_clock);
+	at91_clock_init(pmc, main_clock);
 
 	/* Register the processor-specific clocks */
 	at572d940hf_register_clocks();

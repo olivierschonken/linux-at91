@@ -42,8 +42,20 @@ struct clk *clk_get(struct device *dev, const char *id)
 	return NULL;
 }
 
+static void at91x40_idle(void)
+{
+	void __iomem *ps = (void __iomem *)AT91_VA_BASE_SYS + AT91X40_PS;
+
+	/*
+	 * Disable the processor clock.  The processor will be automatically
+	 * re-enabled by an interrupt or by a reset.
+	 */
+	__raw_writel(AT91_PS_CR_CPU, ps + AT91_PS_CR);
+}
+
 void __init at91x40_initialize(unsigned long main_clock)
 {
+	at91_arch_idle = at91x40_idle;
 	at91_extern_irq = (1 << AT91X40_ID_IRQ0) | (1 << AT91X40_ID_IRQ1)
 			| (1 << AT91X40_ID_IRQ2);
 }

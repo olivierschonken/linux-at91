@@ -83,7 +83,7 @@ static inline unsigned long at91_sram_size(void)
 
 static inline unsigned long at91cap9_rev_identify(void)
 {
-	return (at91_sys_read(AT91_PMC_VER));
+	return (at91_sys_read(AT91CAP9_PMC + AT91_PMC_VER));
 }
 #endif
 

@@ -29,3 +29,4 @@ struct clk {
 
 
 extern int __init clk_register(struct clk *clk);
+extern int at91_clocks_valid_for_suspend(void);

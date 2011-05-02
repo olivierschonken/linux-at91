@@ -36,13 +36,16 @@
 
 #define AT91_EBI	(0xffe00000 - AT91_BASE_SYS)	/* External Bus Interface */
 #define AT91X40_SF	(0xfff00000 - AT91_BASE_SYS)	/* Special Function */
-#define AT91_USART1	(0xfffcc000 - AT91_BASE_SYS)	/* USART 1 */
-#define AT91_USART0	(0xfffd0000 - AT91_BASE_SYS)	/* USART 0 */
+#define AT91X40_USART1	(0xfffcc000 - AT91_BASE_SYS)	/* USART 1 */
+#define AT91X40_USART0	(0xfffd0000 - AT91_BASE_SYS)	/* USART 0 */
 #define AT91_TC		(0xfffe0000 - AT91_BASE_SYS)	/* Timer Counter */
 #define AT91X40_PIOA	(0xffff0000 - AT91_BASE_SYS)	/* PIO Controller A */
 #define AT91X40_PS	(0xffff4000 - AT91_BASE_SYS)	/* Power Save */
 #define AT91X40_WD	(0xffff8000 - AT91_BASE_SYS)	/* Watchdog Timer */
 #define AT91X40_AIC	(0xfffff000 - AT91_BASE_SYS)	/* Advanced Interrupt Controller */
+
+#define AT91_USART0	AT91X40_USART0
+#define AT91_USART1	AT91X40_USART1
 
 /*
  * The AT91x40 series doesn't have a debug unit like the other AT91 parts.
@@ -56,7 +59,7 @@
 /*
  * Support defines for the simple Power Controller module.
  */
-#define	AT91_PS_CR	(AT91X40_PS + 0)	/* PS Control register */
+#define	AT91_PS_CR	(0x00)			/* PS Control register */
 #define	AT91_PS_CR_CPU		(1 << 0)		/* CPU clock disable bit */
 
 #endif /* AT91X40_H */

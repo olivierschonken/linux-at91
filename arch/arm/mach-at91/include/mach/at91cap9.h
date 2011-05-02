@@ -95,7 +95,7 @@
 #define AT91CAP9_PIOB	(0xfffff400 - AT91_BASE_SYS)
 #define AT91CAP9_PIOC	(0xfffff600 - AT91_BASE_SYS)
 #define AT91CAP9_PIOD	(0xfffff800 - AT91_BASE_SYS)
-#define AT91_PMC	(0xfffffc00 - AT91_BASE_SYS)
+#define AT91CAP9_PMC	(0xfffffc00 - AT91_BASE_SYS)
 #define AT91_RSTC	(0xfffffd00 - AT91_BASE_SYS)
 #define AT91_SHDWC	(0xfffffd10 - AT91_BASE_SYS)
 #define AT91CAP9_RTT	(0xfffffd20 - AT91_BASE_SYS)

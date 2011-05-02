@@ -13,6 +13,7 @@
 #include <linux/module.h>
 #include <linux/pm.h>
 
+#include <asm/proc-fns.h>
 #include <asm/irq.h>
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
@@ -269,6 +270,18 @@ static struct at91_gpio_bank at91sam9263_gpio[] = {
 	}
 };
 
+static void at91sam9263_idle(void)
+{
+	void __iomem* pmc = (void __iomem *)AT91_VA_BASE_SYS + AT91SAM9263_PMC;
+
+	/*
+	 * Disable the processor clock, and set the processor (CP15)
+	 * into 'Wait for Interrupt' mode.
+	 */
+	__raw_writel(AT91_PMC_PCK, pmc + AT91_PMC_SCDR);
+	cpu_do_idle();
+}
+
 static void at91sam9263_poweroff(void)
 {
 	at91_sys_write(AT91_SHDW_CR, AT91_SHDW_KEY | AT91_SHDW_SHDW);
@@ -281,15 +294,18 @@ static void at91sam9263_poweroff(void)
 
 void __init at91sam9263_initialize(unsigned long main_clock)
 {
+	void __iomem* pmc = (void __iomem *)AT91_VA_BASE_SYS + AT91SAM9263_PMC;
+
 	/* Map peripherals */
 	iotable_init(at91sam9263_io_desc, ARRAY_SIZE(at91sam9263_io_desc));
 
+	at91_arch_idle = at91sam9263_idle;
 	at91_arch_reset = at91sam9_alt_reset;
 	pm_power_off = at91sam9263_poweroff;
 	at91_extern_irq = (1 << AT91SAM9263_ID_IRQ0) | (1 << AT91SAM9263_ID_IRQ1);
 
 	/* Init clock subsystem */
-	at91_clock_init(main_clock);
+	at91_clock_init(pmc, main_clock);
 
 	/* Register the processor-specific clocks */
 	at91sam9263_register_clocks();

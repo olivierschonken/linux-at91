@@ -38,7 +38,7 @@ extern struct sys_timer at91sam926x_timer;
 extern struct sys_timer at91x40_timer;
 
  /* Clocks */
-extern int __init at91_clock_init(unsigned long main_clock);
+extern int __init at91_clock_init(void __iomem* regbase, unsigned long main_clock);
 struct device;
 extern void __init at91_clock_associate(const char *id, struct device *dev, const char *func);
 
@@ -61,5 +61,6 @@ struct at91_gpio_bank {
 extern void __init at91_gpio_init(struct at91_gpio_bank *, int nr_banks);
 extern void __init at91_gpio_irq_setup(void);
 
+extern void (*at91_arch_idle)(void);
 extern void (*at91_arch_reset)(void);
 extern int at91_extern_irq;

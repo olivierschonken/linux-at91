@@ -57,7 +57,7 @@
 1:	sub	r4, r4, #1
 	cmp	r4, #0
 	beq	2f
-	ldr	r3, [r1, #(AT91_PMC_SR - AT91_PMC)]
+	ldr	r3, [r1, #(AT91_PMC_SR)]
 	tst	r3, #AT91_PMC_MCKRDY
 	beq	1b
 2:
@@ -71,7 +71,7 @@
 1:	sub	r4, r4, #1
 	cmp	r4, #0
 	beq	2f
-	ldr	r3, [r1, #(AT91_PMC_SR - AT91_PMC)]
+	ldr	r3, [r1, #(AT91_PMC_SR)]
 	tst	r3, #AT91_PMC_MOSCS
 	beq	1b
 2:
@@ -85,7 +85,7 @@
 1:	sub	r4, r4, #1
 	cmp	r4, #0
 	beq	2f
-	ldr	r3, [r1, #(AT91_PMC_SR - AT91_PMC)]
+	ldr	r3, [r1, #(AT91_PMC_SR)]
 	tst	r3, #AT91_PMC_LOCKA
 	beq	1b
 2:
@@ -99,7 +99,7 @@
 1:	sub	r4, r4, #1
 	cmp	r4, #0
 	beq	2f
-	ldr	r3, [r1, #(AT91_PMC_SR - AT91_PMC)]
+	ldr	r3, [r1, #(AT91_PMC_SR)]
 	tst	r3, #AT91_PMC_LOCKB
 	beq	1b
 2:
@@ -119,7 +119,8 @@ ENTRY(at91_slow_clock)
 	 *  R4 = temporary register
 	 *  R5 = Base address of second RAM Controller or 0 if not present
 	 */
-	ldr	r1, .at91_va_base_pmc
+	ldr	r1, =at91_pmc_base_addr
+	ldr	r1, [r1]
 	ldr	r2, .at91_va_base_sdramc
 	ldr	r5, .at91_va_base_ramc1
 
@@ -161,14 +162,14 @@ ENTRY(at91_slow_clock)
 #endif
 
 	/* Save Master clock setting */
-	ldr	r3, [r1, #(AT91_PMC_MCKR - AT91_PMC)]
+	ldr	r3, [r1, #(AT91_PMC_MCKR)]
 	str	r3, .saved_mckr
 
 	/*
 	 * Set the Master clock source to slow clock
 	 */
 	bic	r3, r3, #AT91_PMC_CSS
-	str	r3, [r1, #(AT91_PMC_MCKR - AT91_PMC)]
+	str	r3, [r1, #(AT91_PMC_MCKR)]
 
 	wait_mckrdy
 
@@ -179,44 +180,44 @@ ENTRY(at91_slow_clock)
 	 * See AT91RM9200 errata #27 and #28 for details.
 	 */
 	mov	r3, #0
-	str	r3, [r1, #(AT91_PMC_MCKR - AT91_PMC)]
+	str	r3, [r1, #(AT91_PMC_MCKR)]
 
 	wait_mckrdy
 #endif
 
 	/* Save PLLA setting and disable it */
-	ldr	r3, [r1, #(AT91_CKGR_PLLAR - AT91_PMC)]
+	ldr	r3, [r1, #(AT91_CKGR_PLLAR)]
 	str	r3, .saved_pllar
 
 	mov	r3, #AT91_PMC_PLLCOUNT
 	orr	r3, r3, #(1 << 29)		/* bit 29 always set */
-	str	r3, [r1, #(AT91_CKGR_PLLAR - AT91_PMC)]
+	str	r3, [r1, #(AT91_CKGR_PLLAR)]
 
 	/* Save PLLB setting and disable it */
-	ldr	r3, [r1, #(AT91_CKGR_PLLBR - AT91_PMC)]
+	ldr	r3, [r1, #(AT91_CKGR_PLLBR)]
 	str	r3, .saved_pllbr
 
 	mov	r3, #AT91_PMC_PLLCOUNT
-	str	r3, [r1, #(AT91_CKGR_PLLBR - AT91_PMC)]
+	str	r3, [r1, #(AT91_CKGR_PLLBR)]
 
 	/* Turn off the main oscillator */
-	ldr	r3, [r1, #(AT91_CKGR_MOR - AT91_PMC)]
+	ldr	r3, [r1, #(AT91_CKGR_MOR)]
 	bic	r3, r3, #AT91_PMC_MOSCEN
-	str	r3, [r1, #(AT91_CKGR_MOR - AT91_PMC)]
+	str	r3, [r1, #(AT91_CKGR_MOR)]
 
 	/* Wait for interrupt */
 	mcr	p15, 0, r0, c7, c0, 4
 
 	/* Turn on the main oscillator */
-	ldr	r3, [r1, #(AT91_CKGR_MOR - AT91_PMC)]
+	ldr	r3, [r1, #(AT91_CKGR_MOR)]
 	orr	r3, r3, #AT91_PMC_MOSCEN
-	str	r3, [r1, #(AT91_CKGR_MOR - AT91_PMC)]
+	str	r3, [r1, #(AT91_CKGR_MOR)]
 
 	wait_moscrdy
 
 	/* Restore PLLB setting */
 	ldr	r3, .saved_pllbr
-	str	r3, [r1, #(AT91_CKGR_PLLBR - AT91_PMC)]
+	str	r3, [r1, #(AT91_CKGR_PLLBR)]
 
 	tst	r3, #(AT91_PMC_MUL &  0xff0000)
 	bne	1f
@@ -228,7 +229,7 @@ ENTRY(at91_slow_clock)
 
 	/* Restore PLLA setting */
 	ldr	r3, .saved_pllar
-	str	r3, [r1, #(AT91_CKGR_PLLAR - AT91_PMC)]
+	str	r3, [r1, #(AT91_CKGR_PLLAR)]
 
 	tst	r3, #(AT91_PMC_MUL &  0xff0000)
 	bne	3f
@@ -249,7 +250,7 @@ ENTRY(at91_slow_clock)
 	tst	r3, #AT91_PMC_PRES
 	beq	2f
 	and	r3, r3, #AT91_PMC_PRES
-	str	r3, [r1, #(AT91_PMC_MCKR - AT91_PMC)]
+	str	r3, [r1, #(AT91_PMC_MCKR)]
 
 	wait_mckrdy
 #endif
@@ -258,7 +259,7 @@ ENTRY(at91_slow_clock)
 	 * Restore master clock setting
 	 */
 2:	ldr	r3, .saved_mckr
-	str	r3, [r1, #(AT91_PMC_MCKR - AT91_PMC)]
+	str	r3, [r1, #(AT91_PMC_MCKR)]
 
 	wait_mckrdy
 
@@ -299,9 +300,6 @@ ENTRY(at91_slow_clock)
 
 .saved_sam9_lpr1:
 	.word 0
-
-.at91_va_base_pmc:
-	.word AT91_VA_BASE_SYS + AT91_PMC
 
 #ifdef CONFIG_ARCH_AT91RM9200
 .at91_va_base_sdramc:

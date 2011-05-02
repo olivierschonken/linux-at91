@@ -93,7 +93,7 @@
 #define AT91SAM9260_PIOA	(0xfffff400 - AT91_BASE_SYS)
 #define AT91SAM9260_PIOB	(0xfffff600 - AT91_BASE_SYS)
 #define AT91SAM9260_PIOC	(0xfffff800 - AT91_BASE_SYS)
-#define AT91_PMC	(0xfffffc00 - AT91_BASE_SYS)
+#define AT91SAM9260_PMC		(0xfffffc00 - AT91_BASE_SYS)
 #define AT91_RSTC	(0xfffffd00 - AT91_BASE_SYS)
 #define AT91_SHDWC	(0xfffffd10 - AT91_BASE_SYS)
 #define AT91SAM9260_RTT		(0xfffffd20 - AT91_BASE_SYS)

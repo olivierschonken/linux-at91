@@ -257,6 +257,17 @@ static struct at91_gpio_bank at91rm9200_gpio[] = {
 	}
 };
 
+static void at91rm9200_idle(void)
+{
+	void __iomem *pmc = (void __iomem *)AT91_VA_BASE_SYS + AT91RM9200_PMC;
+
+	/*
+	 * Disable the processor clock.  The processor will be automatically
+	 * re-enabled by an interrupt or by a reset.
+	 */
+	__raw_writel(AT91_PMC_PCK, pmc + AT91_PMC_SCDR);
+}
+
 static void at91rm9200_reset(void)
 {
 	/*
@@ -272,9 +283,12 @@ static void at91rm9200_reset(void)
  * -------------------------------------------------------------------- */
 void __init at91rm9200_initialize(unsigned long main_clock, unsigned short banks)
 {
+	void __iomem *pmc = (void __iomem *)AT91_VA_BASE_SYS + AT91RM9200_PMC;
+
 	/* Map peripherals */
 	iotable_init(at91rm9200_io_desc, ARRAY_SIZE(at91rm9200_io_desc));
 
+	at91_arch_idle = at91rm9200_idle;
 	at91_arch_reset = at91rm9200_reset;
 	at91_extern_irq = (1 << AT91RM9200_ID_IRQ0) | (1 << AT91RM9200_ID_IRQ1)
 			| (1 << AT91RM9200_ID_IRQ2) | (1 << AT91RM9200_ID_IRQ3)
@@ -282,7 +296,7 @@ void __init at91rm9200_initialize(unsigned long main_clock, unsigned short banks
 			| (1 << AT91RM9200_ID_IRQ6);
 
 	/* Init clock subsystem */
-	at91_clock_init(main_clock);
+	at91_clock_init(pmc, main_clock);
 
 	/* Register the processor-specific clocks */
 	at91rm9200_register_clocks();
