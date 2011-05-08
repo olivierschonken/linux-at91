@@ -915,13 +915,8 @@ static void pullup(struct at91_udc *udc, int is_on)
 
 			txvc |= AT91_UDP_TXVC_PUON;
 			at91_udp_write(udc, AT91_UDP_TXVC, txvc);
-		} else if (cpu_is_at91sam9261() || cpu_is_at91sam9g10()) {
-			u32	usbpucr;
-
-			usbpucr = at91_sys_read(AT91_MATRIX_USBPUCR);
-			usbpucr |= AT91_MATRIX_USBPUCR_PUON;
-			at91_sys_write(AT91_MATRIX_USBPUCR, usbpucr);
-		}
+		} else if (udc->board.pullup)
+			(udc->board.pullup)(is_on);
 	} else {
 		stop_activity(udc);
 		at91_udp_write(udc, AT91_UDP_IDR, AT91_UDP_RXRSM);
@@ -933,13 +928,8 @@ static void pullup(struct at91_udc *udc, int is_on)
 
 			txvc &= ~AT91_UDP_TXVC_PUON;
 			at91_udp_write(udc, AT91_UDP_TXVC, txvc);
-		} else if (cpu_is_at91sam9261() || cpu_is_at91sam9g10()) {
-			u32	usbpucr;
-
-			usbpucr = at91_sys_read(AT91_MATRIX_USBPUCR);
-			usbpucr &= ~AT91_MATRIX_USBPUCR_PUON;
-			at91_sys_write(AT91_MATRIX_USBPUCR, usbpucr);
-		}
+		} else if (udc->board.pullup)
+			(udc->board.pullup)(is_on);
 		clk_off(udc);
 	}
 }

@@ -22,6 +22,7 @@
 #include <mach/at91sam9rl_matrix.h>
 #include <mach/at91sam9_smc.h>
 #include <mach/at_hdmac.h>
+#include <mach/at91_pmc.h>
 
 #include "generic.h"
 
@@ -76,6 +77,16 @@ void __init at91_add_device_hdmac(void) {}
  * -------------------------------------------------------------------- */
 
 #if defined(CONFIG_USB_GADGET_ATMEL_USBA) || defined(CONFIG_USB_GADGET_ATMEL_USBA_MODULE)
+
+static void at91sam9rl_udc_bias(int on)
+{
+	unsigned int uckr = __raw_readl(AT91SAM9RL_PMC + AT91_CKGR_UCKR);
+
+	if (on)
+		__raw_writel(uckr | AT91_PMC_BIASEN, AT91SAM9RL_PMC + AT91_CKGR_UCKR);
+	else
+		__raw_writel(uckr & ~(AT91_PMC_BIASEN), AT91SAM9RL_PMC + AT91_CKGR_UCKR);
+}
 
 static struct resource usba_udc_resources[] = {
 	[0] = {
@@ -154,6 +165,7 @@ void __init at91_add_device_usba(struct usba_platform_data *data)
 	}
 
 	/* Pullup pin is handled internally by USB device peripheral */
+	usba_udc_data.pdata.set_bias = at91sam9rl_udc_bias;
 
 	/* Clocks */
 	at91_clock_associate("utmi_clk", &at91_usba_udc_device.dev, "hclk");

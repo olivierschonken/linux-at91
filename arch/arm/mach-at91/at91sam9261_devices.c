@@ -80,6 +80,17 @@ void __init at91_add_device_usbh(struct at91_usbh_data *data) {}
  * -------------------------------------------------------------------- */
 
 #ifdef CONFIG_USB_GADGET_AT91
+
+static void at91sam9261_udc_pullup(int on)
+{
+	u32 usbpucr = at91_sys_read(AT91_MATRIX_USBPUCR);
+
+	if (on)
+		at91_sys_write(AT91_MATRIX_USBPUCR, usbpucr | AT91_MATRIX_USBPUCR_PUON);
+	else
+		at91_sys_write(AT91_MATRIX_USBPUCR, usbpucr & ~AT91_MATRIX_USBPUCR_PUON);
+}
+
 static struct at91_udc_data udc_data;
 
 static struct resource udc_resources[] = {
@@ -116,6 +127,7 @@ void __init at91_add_device_udc(struct at91_udc_data *data)
 	}
 
 	/* Pullup pin is handled internally by USB device peripheral */
+	data->pullup = at91sam9261_udc_pullup;
 
 	udc_data = *data;
 	platform_device_register(&at91sam9261_udc_device);

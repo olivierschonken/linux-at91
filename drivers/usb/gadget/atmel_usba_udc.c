@@ -326,27 +326,11 @@ static int vbus_is_present(struct usba_udc *udc)
 	return 1;
 }
 
-#if defined(CONFIG_ARCH_AT91SAM9RL)
-
-#include <mach/at91_pmc.h>
-
-static void toggle_bias(int is_on)
+static void toggle_bias(struct usba_udc *udc, int is_on)
 {
-	unsigned int uckr = at91_sys_read(AT91SAM9RL_PMC + AT91_CKGR_UCKR);
-
-	if (is_on)
-		at91_sys_write(AT91SAM9RL_PMC + AT91_CKGR_UCKR, uckr | AT91_PMC_BIASEN);
-	else
-		at91_sys_write(AT91SAM9RL_PMC + AT91_CKGR_UCKR, uckr & ~(AT91_PMC_BIASEN));
+	if (udc->set_bias)
+		(udc->set_bias)(is_on);
 }
-
-#else
-
-static void toggle_bias(int is_on)
-{
-}
-
-#endif /* CONFIG_ARCH_AT91SAM9RL */
 
 static void next_fifo_transaction(struct usba_ep *ep, struct usba_request *req)
 {
@@ -1648,7 +1632,7 @@ static irqreturn_t usba_udc_irq(int irq, void *devid)
 	DBG(DBG_INT, "irq, status=%#08x\n", status);
 
 	if (status & USBA_DET_SUSPEND) {
-		toggle_bias(0);
+		toggle_bias(udc, 0);
 		usba_writel(udc, INT_CLR, USBA_DET_SUSPEND);
 		DBG(DBG_BUS, "Suspend detected\n");
 		if (udc->gadget.speed != USB_SPEED_UNKNOWN
@@ -1660,7 +1644,7 @@ static irqreturn_t usba_udc_irq(int irq, void *devid)
 	}
 
 	if (status & USBA_WAKE_UP) {
-		toggle_bias(1);
+		toggle_bias(udc, 1);
 		usba_writel(udc, INT_CLR, USBA_WAKE_UP);
 		DBG(DBG_BUS, "Wake Up CPU detected\n");
 	}
@@ -1766,13 +1750,13 @@ static irqreturn_t usba_vbus_irq(int irq, void *devid)
 	vbus = vbus_is_present(udc);
 	if (vbus != udc->vbus_prev) {
 		if (vbus) {
-			toggle_bias(1);
+			toggle_bias(udc, 1);
 			usba_writel(udc, CTRL, USBA_ENABLE_MASK);
 			usba_writel(udc, INT_ENB, USBA_END_OF_RESET);
 		} else {
 			udc->gadget.speed = USB_SPEED_UNKNOWN;
 			reset_all_endpoints(udc);
-			toggle_bias(0);
+			toggle_bias(udc, 0);
 			usba_writel(udc, CTRL, USBA_DISABLE_MASK);
 			if (udc->driver->disconnect) {
 				spin_unlock(&udc->lock);
@@ -1829,7 +1813,7 @@ int usb_gadget_probe_driver(struct usb_gadget_driver *driver,
 	/* If Vbus is present, enable the controller and wait for reset */
 	spin_lock_irqsave(&udc->lock, flags);
 	if (vbus_is_present(udc) && udc->vbus_prev == 0) {
-		toggle_bias(1);
+		toggle_bias(udc, 1);
 		usba_writel(udc, CTRL, USBA_ENABLE_MASK);
 		usba_writel(udc, INT_ENB, USBA_END_OF_RESET);
 	}
@@ -1863,7 +1847,7 @@ int usb_gadget_unregister_driver(struct usb_gadget_driver *driver)
 	spin_unlock_irqrestore(&udc->lock, flags);
 
 	/* This will also disable the DP pullup */
-	toggle_bias(0);
+	toggle_bias(udc, 0);
 	usba_writel(udc, CTRL, USBA_DISABLE_MASK);
 
 	if (udc->driver->disconnect)
@@ -1933,12 +1917,13 @@ static int __init usba_udc_probe(struct platform_device *pdev)
 	device_initialize(&udc->gadget.dev);
 	udc->gadget.dev.parent = &pdev->dev;
 	udc->gadget.dev.dma_mask = pdev->dev.dma_mask;
+	udc->set_bias = pdata->set_bias;
 
 	platform_set_drvdata(pdev, udc);
 
 	/* Make sure we start from a clean slate */
 	clk_enable(pclk);
-	toggle_bias(0);
+	toggle_bias(udc, 0);
 	usba_writel(udc, CTRL, USBA_DISABLE_MASK);
 	clk_disable(pclk);
 

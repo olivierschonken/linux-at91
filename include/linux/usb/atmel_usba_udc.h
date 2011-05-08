@@ -16,6 +16,7 @@ struct usba_ep_data {
 struct usba_platform_data {
 	int			vbus_pin;
 	int			vbus_pin_inverted;
+	void			(*set_bias)(int on);
 	int			num_ep;
 	struct usba_ep_data	ep[0];
 };
