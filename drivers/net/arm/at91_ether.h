@@ -86,6 +86,7 @@ struct at91_private
 {
 	struct mii_if_info mii;			/* ethtool support */
 	struct at91_eth_data board_data;	/* board-specific configuration */
+	void __iomem *emac_base;		/* base register address */
 	struct clk *ether_clk;			/* clock */
 
 	/* PHY */
