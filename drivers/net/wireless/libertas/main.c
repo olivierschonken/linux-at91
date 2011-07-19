@@ -1075,11 +1075,9 @@ int lbs_get_firmware(struct device *dev, const char *user_helper,
 	const struct lbs_fw_table *iter;
 	int ret;
 
-	BUG_ON(helper == NULL);
-	BUG_ON(mainfw == NULL);
-
 	/* Try user-specified firmware first */
-	if (user_helper) {
+	if (user_helper && helper) {
+		dev_info(dev, "load user helper firmware: %s\n", user_helper);
 		ret = request_firmware(helper, user_helper, dev);
 		if (ret) {
 			dev_err(dev, "couldn't find helper firmware %s\n",
@@ -1087,7 +1085,8 @@ int lbs_get_firmware(struct device *dev, const char *user_helper,
 			goto fail;
 		}
 	}
-	if (user_mainfw) {
+	if (user_mainfw && mainfw) {
+		dev_info(dev, "load user main firmware: %s\n", user_mainfw);
 		ret = request_firmware(mainfw, user_mainfw, dev);
 		if (ret) {
 			dev_err(dev, "couldn't find main firmware %s\n",
@@ -1096,8 +1095,7 @@ int lbs_get_firmware(struct device *dev, const char *user_helper,
 		}
 	}
 
-	if (*helper && *mainfw)
-		return 0;
+	return 0;
 
 	/* Otherwise search for firmware to use.  If neither the helper or
 	 * the main firmware were specified by the user, then we need to

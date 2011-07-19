@@ -723,7 +723,7 @@ static int if_sdio_prog_firmware(struct if_sdio_card *card)
 	}
 
 	ret = lbs_get_firmware(&card->func->dev, lbs_helper_name, lbs_fw_name,
-				card->model, &fw_table[0], &helper, &mainfw);
+				card->model, &fw_table[0], &helper, NULL);
 	if (ret) {
 		pr_err("failed to find firmware (%d)\n", ret);
 		goto out;
@@ -734,6 +734,10 @@ static int if_sdio_prog_firmware(struct if_sdio_card *card)
 		goto out;
 
 	lbs_deb_sdio("Helper firmware loaded\n");
+
+	ret = lbs_get_firmware(&card->func->dev, lbs_helper_name, lbs_fw_name,
+				card->model, &fw_table[0], NULL, &mainfw);
+
 
 	ret = if_sdio_prog_real(card, mainfw);
 	if (ret)
