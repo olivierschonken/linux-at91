@@ -23,6 +23,8 @@
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/slab.h>
+#include <linux/of.h>
+#include <linux/of_device.h>
 
 #include "at_hdmac_regs.h"
 
@@ -1167,6 +1169,16 @@ static void atc_free_chan_resources(struct dma_chan *chan)
 
 /*--  Module Management  -----------------------------------------------*/
 
+#if defined(CONFIG_OF)
+static const struct of_device_id atmel_dma_dt_ids[] = {
+	{ .compatible = "atmel,at91sam9rl-hdmac" },
+	{ .compatible = "atmel,at91sam9g45-hdmac" },
+	{ /* sentinel */ }
+};
+
+MODULE_DEVICE_TABLE(of, atmel_dma_dt_ids);
+#endif
+
 /**
  * at_dma_off - disable DMA controller
  * @atdma: the Atmel HDAMC device
@@ -1185,17 +1197,36 @@ static void at_dma_off(struct at_dma *atdma)
 
 static int __init at_dma_probe(struct platform_device *pdev)
 {
-	struct at_dma_platform_data *pdata;
+	const struct of_device_id *of_id =
+			of_match_device(atmel_dma_dt_ids, &pdev->dev);
+	struct device_node	*np = pdev->dev.of_node;
+	struct at_dma_platform_data *pdata = pdev->dev.platform_data;
 	struct resource		*io;
 	struct at_dma		*atdma;
 	size_t			size;
 	int			irq;
 	int			err;
 	int			i;
+	u32			nr_channels;
+	dma_cap_mask_t		cap_mask = {};
 
-	/* get DMA Controller parameters from platform */
-	pdata = pdev->dev.platform_data;
-	if (!pdata || pdata->nr_channels > AT_DMA_MAX_NR_CHANNELS)
+	/* get DMA Controller parameters */
+	if (of_id) {
+		if (of_property_read_u32(np, "atmel,hdmac-nr-channels",
+					&nr_channels))
+			return -EINVAL;
+		if (of_find_property(np, "atmel,hdmac-cap-memcpy", NULL))
+			dma_cap_set(DMA_MEMCPY, cap_mask);
+		if (of_find_property(np, "atmel,hdmac-cap-slave", NULL))
+			dma_cap_set(DMA_SLAVE, cap_mask);
+	} else if (pdata) {
+		nr_channels = pdata->nr_channels;
+		cap_mask = pdata->cap_mask;
+	} else {
+		return -EINVAL;
+	}
+
+	if (!nr_channels || nr_channels > AT_DMA_MAX_NR_CHANNELS)
 		return -EINVAL;
 
 	io = platform_get_resource(pdev, IORESOURCE_MEM, 0);
@@ -1207,14 +1238,13 @@ static int __init at_dma_probe(struct platform_device *pdev)
 		return irq;
 
 	size = sizeof(struct at_dma);
-	size += pdata->nr_channels * sizeof(struct at_dma_chan);
+	size += nr_channels * sizeof(struct at_dma_chan);
 	atdma = kzalloc(size, GFP_KERNEL);
 	if (!atdma)
 		return -ENOMEM;
 
-	/* discover transaction capabilites from the platform data */
-	atdma->dma_common.cap_mask = pdata->cap_mask;
-	atdma->all_chan_mask = (1 << pdata->nr_channels) - 1;
+	atdma->dma_common.cap_mask = cap_mask;
+	atdma->all_chan_mask = (1 << nr_channels) - 1;
 
 	size = io->end - io->start + 1;
 	if (!request_mem_region(io->start, size, pdev->dev.driver->name)) {
@@ -1260,7 +1290,7 @@ static int __init at_dma_probe(struct platform_device *pdev)
 
 	/* initialize channels related values */
 	INIT_LIST_HEAD(&atdma->dma_common.channels);
-	for (i = 0; i < pdata->nr_channels; i++, atdma->dma_common.chancnt++) {
+	for (i = 0; i < nr_channels; i++, atdma->dma_common.chancnt++) {
 		struct at_dma_chan	*atchan = &atdma->chan[i];
 
 		atchan->chan_common.device = &atdma->dma_common;
@@ -1406,6 +1436,7 @@ static struct platform_driver at_dma_driver = {
 	.driver = {
 		.name	= "at_hdmac",
 		.pm	= &at_dma_dev_pm_ops,
+		.of_match_table	= of_match_ptr(atmel_dma_dt_ids),
 	},
 };
 

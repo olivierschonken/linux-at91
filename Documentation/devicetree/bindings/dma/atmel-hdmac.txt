@@ -1,0 +1,23 @@
+* Atmel Direct Memory Access Controller (DMA)
+
+Required properties:
+- compatible: Should be "atmel,<chip>-hdmac"
+- reg: Should contain DMA registers location and length
+- interrupts: Should contain DMA interrupt
+- atmel,hdmac-nr-channels: Should contain number of channels
+  available in the controller
+
+Optional properties:
+- atmel,hdmac-cap-memcpy: Chip can do memory to memory transfers
+- atmel,hdmac-cap-slave: Chip can do peripherals/memory transfers
+
+Examples:
+
+dma@ffffec00 {
+	compatible = "atmel,at91sam9g45-hdmac";
+	reg = <0xffffec00 0x200>;
+	interrupts = <21>;
+	atmel,hdmac-nr-channels = <8>;
+	atmel,hdmac-cap-memcpy;
+	atmel,hdmac-cap-slave;
+};
