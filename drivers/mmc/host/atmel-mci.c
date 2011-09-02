@@ -76,6 +76,7 @@ struct atmel_mci_caps {
 	bool    has_cstor_reg;
 	bool    has_highspeed;
 	bool    has_rwproof;
+	bool	has_bad_data_ordering;
 };
 
 struct atmel_mci_dma {
@@ -89,6 +90,10 @@ struct atmel_mci_dma {
  * @regs: Pointer to MMIO registers.
  * @sg: Scatterlist entry currently being processed by PIO or PDC code.
  * @pio_offset: Offset into the current scatterlist entry.
+ * @buffer: Buffer used for rm9200 chips because of endianess issue. This
+ *	buffer is used to swap bytes after a read or before a write command.
+ * @buf_size: Size of buffer.
+ * @phys_buf_addr: buffer address for pdc.
  * @cur_slot: The slot which is currently using the controller.
  * @mrq: The request currently being processed on @cur_slot,
  *	or NULL if the controller is idle.
@@ -164,6 +169,9 @@ struct atmel_mci {
 
 	struct scatterlist	*sg;
 	unsigned int		pio_offset;
+	unsigned int		*buffer;
+	unsigned int		buf_size;
+	dma_addr_t		buf_phys_addr;
 
 	struct atmel_mci_slot	*cur_slot;
 	struct mmc_request	*mrq;
@@ -251,6 +259,11 @@ struct atmel_mci_slot {
 	set_bit(event, &host->completed_events)
 #define atmci_set_pending(host, event)				\
 	set_bit(event, &host->pending_events)
+
+static inline unsigned int atmci_get_version(struct atmel_mci *host)
+{
+	return atmci_readl(host, ATMCI_VERSION) & 0x00000fff;
+}
 
 /*
  * The debugfs stuff below is mostly optimized away when
@@ -607,7 +620,10 @@ static void atmci_pdc_set_single_buf(struct atmel_mci *host,
 		counter_reg += ATMEL_PDC_SCND_BUF_OFF;
 	}
 
-	atmci_writel(host, pointer_reg, sg_dma_address(host->sg));
+	if (host->caps.has_bad_data_ordering)
+		atmci_writel(host, pointer_reg, host->buf_phys_addr);
+	else
+		atmci_writel(host, pointer_reg, sg_dma_address(host->sg));
 	if (host->data_size <= sg_dma_len(host->sg)) {
 		if (host->data_size & 0x3) {
 			/* If size is different from modulo 4, transfer bytes */
@@ -660,6 +676,16 @@ static void atmci_pdc_cleanup(struct atmel_mci *host)
  */
 static void atmci_pdc_complete(struct atmel_mci *host)
 {
+	int i;
+
+	if ((host->caps.has_bad_data_ordering)
+	    && (host->data->flags & MMC_DATA_READ)) {
+		for (i = 0; i < host->data_size; i++)
+			host->buffer[i] = swab32(host->buffer[i]);
+		sg_copy_from_buffer(host->data->sg, host->data->sg_len,
+		                    host->buffer, host->data_size);
+	}
+
 	atmci_writel(host, ATMEL_PDC_PTCR, ATMEL_PDC_RXTDIS | ATMEL_PDC_TXTDIS);
 	atmci_pdc_cleanup(host);
 
@@ -670,7 +696,17 @@ static void atmci_pdc_complete(struct atmel_mci *host)
 	if (host->data) {
 		atmci_set_pending(host, EVENT_XFER_COMPLETE);
 		tasklet_schedule(&host->tasklet);
-		atmci_writel(host, ATMCI_IER, ATMCI_NOTBUSY);
+		/* With first mci ip, NOTBUSY interrupt is not send after
+		 * multiple block operations.
+		 */
+		if (atmci_get_version(host) < 0x100) {
+			if (host->mrq->cmd->data->blocks > 1)
+				atmci_writel(host, ATMCI_IER, ATMCI_BLKE);
+			else
+				atmci_writel(host, ATMCI_IER, ATMCI_NOTBUSY);
+		} else {
+			atmci_writel(host, ATMCI_IER, ATMCI_NOTBUSY);
+		}
 	}
 }
 
@@ -778,6 +814,7 @@ static u32 atmci_prepare_data(struct atmel_mci *host, struct mmc_data *data)
 static u32
 atmci_prepare_data_pdc(struct atmel_mci *host, struct mmc_data *data)
 {
+	int i;
 	u32 iflags, tmp;
 	unsigned int sg_len;
 	enum dma_data_direction dir;
@@ -808,6 +845,14 @@ atmci_prepare_data_pdc(struct atmel_mci *host, struct mmc_data *data)
 	/* Configure PDC */
 	host->data_size = data->blocks * data->blksz;
 	sg_len = dma_map_sg(&host->pdev->dev, data->sg, data->sg_len, dir);
+	if ( (host->caps.has_bad_data_ordering)
+	     && (host->data->flags & MMC_DATA_WRITE)) {
+		sg_copy_to_buffer(host->data->sg, host->data->sg_len,
+		                  host->buffer, host->data_size);
+		for (i = 0; i < host->data_size; i++)
+			host->buffer[i] = swab32(host->buffer[i]);
+	}
+
 	if (host->data_size)
 		atmci_pdc_set_both_buf(host,
 			((dir == DMA_FROM_DEVICE)?XFER_RECEIVE:XFER_TRANSMIT));
@@ -1780,9 +1825,9 @@ static irqreturn_t atmci_interrupt(int irq, void *dev_id)
 		}
 
 
-		if (pending & ATMCI_NOTBUSY) {
+		if ((pending & ATMCI_NOTBUSY) || (pending & ATMCI_BLKE)) {
 			atmci_writel(host, ATMCI_IDR,
-					ATMCI_DATA_ERROR_FLAGS | ATMCI_NOTBUSY);
+					ATMCI_DATA_ERROR_FLAGS | ATMCI_NOTBUSY | ATMCI_BLKE);
 			if (!host->data_status)
 				host->data_status = status;
 			smp_wmb();
@@ -1851,10 +1896,18 @@ static int __init atmci_init_slot(struct atmel_mci *host,
 	if (slot_data->bus_width >= 4)
 		mmc->caps |= MMC_CAP_4_BIT_DATA;
 
-	mmc->max_segs = 64;
-	mmc->max_req_size = 32768 * 512;
-	mmc->max_blk_size = 32768;
-	mmc->max_blk_count = 512;
+	if (atmci_get_version(host) >= 0x100) {
+		mmc->max_segs = 64;
+		mmc->max_blk_size = 32768;
+		mmc->max_blk_count = 512;
+		mmc->max_req_size = mmc->max_blk_size * mmc->max_blk_size;
+	} else {
+		mmc->max_segs = 256;
+		mmc->max_blk_size = 4095;
+		mmc->max_blk_count = 256;
+		mmc->max_req_size = mmc->max_blk_size * mmc->max_blk_count;
+		mmc->max_seg_size = mmc->max_blk_size * mmc->max_segs;
+	}
 
 	/* Assume card is present initially */
 	set_bit(ATMCI_CARD_PRESENT, &slot->flags);
@@ -1971,11 +2024,6 @@ static void atmci_configure_dma(struct atmel_mci *host)
 					dma_chan_name(host->dma.chan));
 }
 
-static inline unsigned int atmci_get_version(struct atmel_mci *host)
-{
-	return atmci_readl(host, ATMCI_VERSION) & 0x00000fff;
-}
-
 /*
  * HSMCI (High Speed MCI) module is not fully compatible with MCI module.
  * HSMCI provides DMA support and a new config register but no more supports
@@ -1995,9 +2043,14 @@ static void __init atmci_get_cap(struct atmel_mci *host)
 	host->caps.has_cstor_reg = 0;
 	host->caps.has_highspeed = 0;
 	host->caps.has_rwproof = 0;
+	host->caps.has_bad_data_ordering = 0;
 
 	/* keep only major version number */
 	switch (version & 0xf00) {
+		case 0x000:
+			host->caps.has_pdc = 1;
+			host->caps.has_bad_data_ordering = 1;
+			break;
 		case 0x100:
 		case 0x200:
 			host->caps.has_pdc = 1;
@@ -2105,21 +2158,51 @@ static int __init atmci_probe(struct platform_device *pdev)
 	nr_slots = 0;
 	ret = -ENODEV;
 	if (pdata->slot[0].bus_width) {
-		ret = atmci_init_slot(host, &pdata->slot[0],
+		dev_info(&pdev->dev, "init slot 0\n");
+		if (atmci_get_version(host) < 0x100) {
+			/* No SDIO support */
+			ret = atmci_init_slot(host, &pdata->slot[0],
+				0, ATMCI_SDCSEL_SLOT_A, 0);
+		} else {
+			ret = atmci_init_slot(host, &pdata->slot[0],
 				0, ATMCI_SDCSEL_SLOT_A, ATMCI_SDIOIRQA);
-		if (!ret)
+		}
+		if (!ret) {
 			nr_slots++;
+			host->buf_size = host->slot[0]->mmc->max_req_size;
+		}
 	}
 	if (pdata->slot[1].bus_width) {
-		ret = atmci_init_slot(host, &pdata->slot[1],
+		dev_info(&pdev->dev, "init slot 1\n");
+		if (atmci_get_version(host) < 0x100) {
+			/* No SDIO support */
+			ret = atmci_init_slot(host, &pdata->slot[1],
+				1, ATMCI_SDCSEL_SLOT_B, 0);
+		} else {
+			ret = atmci_init_slot(host, &pdata->slot[1],
 				1, ATMCI_SDCSEL_SLOT_B, ATMCI_SDIOIRQB);
-		if (!ret)
+		}
+		if (!ret) {
 			nr_slots++;
+			if (host->slot[1]->mmc->max_req_size > host->buf_size)
+				host->buf_size = host->slot[1]->mmc->max_req_size;
+		}
 	}
 
 	if (!nr_slots) {
 		dev_err(&pdev->dev, "init failed: no slot defined\n");
 		goto err_init_slot;
+	}
+
+	if (host->caps.has_bad_data_ordering) {
+		host->buffer = dma_alloc_coherent(&pdev->dev, host->buf_size,
+		                                  &host->buf_phys_addr,
+						  GFP_KERNEL);
+		if (!host->buffer) {
+			ret = -ENOMEM;
+			dev_err(&pdev->dev, "buffer alloc failed\n");
+			goto err_init_slot;
+		}
 	}
 
 	dev_info(&pdev->dev,
@@ -2147,6 +2230,10 @@ static int __exit atmci_remove(struct platform_device *pdev)
 	unsigned int		i;
 
 	platform_set_drvdata(pdev, NULL);
+
+	if (host->buffer)
+		dma_free_coherent(&pdev->dev, host->buf_size,
+		                  host->buffer, host->buf_phys_addr);
 
 	for (i = 0; i < ATMCI_MAX_NR_SLOTS; i++) {
 		if (host->slot[i])
