@@ -70,6 +70,7 @@ enum atmci_pdc_buf {
 };
 
 struct atmel_mci_caps {
+	int	version;
 	bool    has_dma;
 	bool    has_pdc;
 	bool    has_cfg_reg;
@@ -526,6 +527,40 @@ static void atmci_set_timeout(struct atmel_mci *host,
 	atmci_writel(host, ATMCI_DTOR, (ATMCI_DTOMUL(dtomul) | ATMCI_DTOCYC(dtocyc)));
 }
 
+static void atmci_reset_host(struct atmci_mci *host)
+{
+	unsigned long flags;
+	u32 mr;
+	u32 sdcr;
+	u32 dtor;
+	u32 imr;
+
+	local_irq_save(flags);
+	imr = atmci_readl(host, ATMCI_IMR);
+
+	atmci_writel(host, ATMCI_IDR, 0xffffffff);
+
+	/* save current state */
+	mr = atmci_readl(host, ATMCI_CR_MR) & 0x7fff;
+	sdcr = atmci_readl(host, ATMCI_CR_SDCR);
+	dtor = atmci_readl(host, ATMCI_CR_DTOR);
+
+	/* reset the controller */
+	atmci_writel(host, ATMCI_CR, ATMCI_CR_MCIDIS | ATMCI_CR_SWRST);
+
+	/* restore state */
+	atmci_writel(host, ATMCI_CR, ATMCI_CR_MCIEN);
+	atmci_writel(host, ATMCI_MR, mr);
+	atmci_writel(host, ATMCI_SDCR, sdcr);
+	atmci_writel(host, ATMCI_DTOR, dtor);
+	atmci_writel(host, ATMCI_IER, imr);
+
+	/* make sure sdio interrupts will fire */
+	atmci_readl(host, AT91_MCI_SR);
+
+	local_irq_restore(flags);
+}
+
 /*
  * Return mask with command flags to be enabled for this command.
  */
@@ -677,13 +712,19 @@ static void atmci_pdc_cleanup(struct atmel_mci *host)
 static void atmci_pdc_complete(struct atmel_mci *host)
 {
 	int i;
+	int transfer_size = host->data->blocks * host->data->blksz;
+
+	//printk("pdc complete\n");
 
 	if ((host->caps.has_bad_data_ordering)
 	    && (host->data->flags & MMC_DATA_READ)) {
-		for (i = 0; i < host->data_size; i++)
+		printk("-----\n");
+		printk("sg: 0x%08x, sg_dma_len: %u transfer_size: %u sg_len: %u\n",
+		       host->sg, sg_dma_len(host->sg), transfer_size, host->data->sg_len);
+		for (i = 0; i < transfer_size; i++)
 			host->buffer[i] = swab32(host->buffer[i]);
 		sg_copy_from_buffer(host->data->sg, host->data->sg_len,
-		                    host->buffer, host->data_size);
+		                    host->buffer, transfer_size);
 	}
 
 	atmci_writel(host, ATMEL_PDC_PTCR, ATMEL_PDC_RXTDIS | ATMEL_PDC_TXTDIS);
@@ -694,11 +735,9 @@ static void atmci_pdc_complete(struct atmel_mci *host)
 	 * to send the stop command or waiting for NBUSY in this case.
 	 */
 	if (host->data) {
+		//printk("set EVENT_XFER_COMPLETE\n");
 		atmci_set_pending(host, EVENT_XFER_COMPLETE);
 		tasklet_schedule(&host->tasklet);
-		/* With first mci ip, NOTBUSY interrupt is not send after
-		 * multiple block operations.
-		 */
 		if (atmci_get_version(host) < 0x100) {
 			if (host->mrq->cmd->data->blocks > 1)
 				atmci_writel(host, ATMCI_IER, ATMCI_BLKE);
@@ -827,6 +866,15 @@ atmci_prepare_data_pdc(struct atmel_mci *host, struct mmc_data *data)
 
 	/* Enable pdc mode */
 	atmci_writel(host, ATMCI_MR, host->mode_reg | ATMCI_MR_PDCMODE);
+
+	/*
+	 * With first mci ip, NOTBUSY interrupt is not send after multiple
+	 * block operations. Moreover the BLKE interrupt cannot be enabled at
+	 * the time as NOTBUSY because sometimes (mainly for write operation)
+	 * it's too late.
+	 */
+	//if (host->caps.version < 0x100)
+	//	iflags |= ATMCI_BLKE;
 
 	if (data->flags & MMC_DATA_READ) {
 		dir = DMA_FROM_DEVICE;
@@ -1009,7 +1057,8 @@ static void atmci_start_request(struct atmel_mci *host,
 	host->completed_events = 0;
 	host->data_status = 0;
 
-	if (host->need_reset) {
+	//if (host->need_reset) {
+	if (1) {
 		atmci_writel(host, ATMCI_CR, ATMCI_CR_SWRST);
 		atmci_writel(host, ATMCI_CR, ATMCI_CR_MCIEN);
 		atmci_writel(host, ATMCI_MR, host->mode_reg);
@@ -1033,6 +1082,11 @@ static void atmci_start_request(struct atmel_mci *host,
 	iflags = 0;
 	data = mrq->data;
 	if (data) {
+
+		printk("#####\n");
+		printk("sg=0x%08x, size=%u, sg_len=%u\n",
+		       data->sg, data->blocks * data->blksz, data->sg_len);
+
 		atmci_set_timeout(host, slot, data);
 
 		/* Must set block count/size before sending command */
@@ -1489,6 +1543,7 @@ static void atmci_tasklet_func(unsigned long priv)
 			break;
 
 		case STATE_SENDING_CMD:
+			//printk("+++ SENDING_CMD +++\n");
 			if (!atmci_test_and_clear_pending(host,
 						EVENT_CMD_COMPLETE))
 				break;
@@ -1505,6 +1560,7 @@ static void atmci_tasklet_func(unsigned long priv)
 			/* fall through */
 
 		case STATE_SENDING_DATA:
+			//printk("+++ SENDING_DATA +++\n");
 			if (atmci_test_and_clear_pending(host,
 						EVENT_DATA_ERROR)) {
 				host->stop_transfer(host);
@@ -1523,9 +1579,12 @@ static void atmci_tasklet_func(unsigned long priv)
 			/* fall through */
 
 		case STATE_DATA_BUSY:
+			//printk("+++ DATA_BUSY +++\n");
 			if (!atmci_test_and_clear_pending(host,
-						EVENT_DATA_COMPLETE))
+						EVENT_DATA_COMPLETE)) {
+				//printk("break\n");
 				break;
+			}
 
 			host->data = NULL;
 			atmci_set_completed(host, EVENT_DATA_COMPLETE);
@@ -1546,12 +1605,14 @@ static void atmci_tasklet_func(unsigned long priv)
 					data->error = -EIO;
 				}
 			} else {
+				//printk("no error\n");
 				data->bytes_xfered = data->blocks * data->blksz;
 				data->error = 0;
 				atmci_writel(host, ATMCI_IDR, ATMCI_DATA_ERROR_FLAGS);
 			}
 
 			if (!data->stop) {
+				//printk("request end\n");
 				atmci_request_end(host, host->mrq);
 				goto unlock;
 			}
@@ -1562,6 +1623,7 @@ static void atmci_tasklet_func(unsigned long priv)
 			/* fall through */
 
 		case STATE_SENDING_STOP:
+			//printk("+++ SENDING_STOP +++\n");
 			if (!atmci_test_and_clear_pending(host,
 						EVENT_CMD_COMPLETE))
 				break;
@@ -1760,10 +1822,12 @@ static irqreturn_t atmci_interrupt(int irq, void *dev_id)
 		status = atmci_readl(host, ATMCI_SR);
 		mask = atmci_readl(host, ATMCI_IMR);
 		pending = status & mask;
+		//printk("status=0x%08x, mask=0x%08x, pending=0x%08x\n", status, mask, pending);
 		if (!pending)
 			break;
 
 		if (pending & ATMCI_DATA_ERROR_FLAGS) {
+			//printk("~~~ DATA_ERROR ~~~\n");
 			atmci_writel(host, ATMCI_IDR, ATMCI_DATA_ERROR_FLAGS
 					| ATMCI_RXRDY | ATMCI_TXRDY);
 			pending &= atmci_readl(host, ATMCI_IMR);
@@ -1775,6 +1839,7 @@ static irqreturn_t atmci_interrupt(int irq, void *dev_id)
 		}
 
 		if (pending & ATMCI_TXBUFE) {
+			//printk("~~~ TXBUFE ~~~\n");
 			atmci_writel(host, ATMCI_IDR, ATMCI_TXBUFE);
 			atmci_writel(host, ATMCI_IDR, ATMCI_ENDTX);
 			/*
@@ -1782,6 +1847,7 @@ static irqreturn_t atmci_interrupt(int irq, void *dev_id)
 			 * the second pdc buffer, so we need to reconfigure first and
 			 * second buffers again
 			 */
+			//printk("data_size=%u\n", host->data_size);
 			if (host->data_size) {
 				atmci_pdc_set_both_buf(host, XFER_TRANSMIT);
 				atmci_writel(host, ATMCI_IER, ATMCI_ENDTX);
@@ -1790,6 +1856,7 @@ static irqreturn_t atmci_interrupt(int irq, void *dev_id)
 				atmci_pdc_complete(host);
 			}
 		} else if (pending & ATMCI_ENDTX) {
+			//printk("~~~ ENDTX ~~~\n");
 			atmci_writel(host, ATMCI_IDR, ATMCI_ENDTX);
 
 			if (host->data_size) {
@@ -1800,6 +1867,7 @@ static irqreturn_t atmci_interrupt(int irq, void *dev_id)
 		}
 
 		if (pending & ATMCI_RXBUFF) {
+			//printk("~~~ RXBUFF ~~~\n");
 			atmci_writel(host, ATMCI_IDR, ATMCI_RXBUFF);
 			atmci_writel(host, ATMCI_IDR, ATMCI_ENDRX);
 			/*
@@ -1815,6 +1883,7 @@ static irqreturn_t atmci_interrupt(int irq, void *dev_id)
 				atmci_pdc_complete(host);
 			}
 		} else if (pending & ATMCI_ENDRX) {
+			//printk("~~~ ENDRX ~~~\n");
 			atmci_writel(host, ATMCI_IDR, ATMCI_ENDRX);
 
 			if (host->data_size) {
@@ -1826,6 +1895,7 @@ static irqreturn_t atmci_interrupt(int irq, void *dev_id)
 
 
 		if ((pending & ATMCI_NOTBUSY) || (pending & ATMCI_BLKE)) {
+			//printk("~~~ NOT_BUSY || BLKE ~~~\n");
 			atmci_writel(host, ATMCI_IDR,
 					ATMCI_DATA_ERROR_FLAGS | ATMCI_NOTBUSY | ATMCI_BLKE);
 			if (!host->data_status)
@@ -1834,13 +1904,19 @@ static irqreturn_t atmci_interrupt(int irq, void *dev_id)
 			atmci_set_pending(host, EVENT_DATA_COMPLETE);
 			tasklet_schedule(&host->tasklet);
 		}
-		if (pending & ATMCI_RXRDY)
+		if (pending & ATMCI_RXRDY) {
+			//printk("~~~ RXRDY ~~~\n");
 			atmci_read_data_pio(host);
-		if (pending & ATMCI_TXRDY)
+		}
+		if (pending & ATMCI_TXRDY) {
+			//printk("~~~ TXRDY ~~~\n");
 			atmci_write_data_pio(host);
+		}
 
-		if (pending & ATMCI_CMDRDY)
+		if (pending & ATMCI_CMDRDY) {
+			//printk("~~~ CMDRDY ~~~\n");
 			atmci_cmd_interrupt(host, status);
+		}
 
 		if (pending & (ATMCI_SDIOIRQA | ATMCI_SDIOIRQB))
 			atmci_sdio_interrupt(host, status);
@@ -1896,7 +1972,7 @@ static int __init atmci_init_slot(struct atmel_mci *host,
 	if (slot_data->bus_width >= 4)
 		mmc->caps |= MMC_CAP_4_BIT_DATA;
 
-	if (atmci_get_version(host) >= 0x100) {
+	if (host->caps.version >= 0x100) {
 		mmc->max_segs = 64;
 		mmc->max_blk_size = 32768;
 		mmc->max_blk_count = 512;
@@ -2031,11 +2107,9 @@ static void atmci_configure_dma(struct atmel_mci *host)
  */
 static void __init atmci_get_cap(struct atmel_mci *host)
 {
-	unsigned int version;
-
-	version = atmci_get_version(host);
+	host->caps.version = atmci_get_version(host);
 	dev_info(&host->pdev->dev,
-			"version: 0x%x\n", version);
+			"version: 0x%x\n", host->caps.version);
 
 	host->caps.has_dma = 0;
 	host->caps.has_pdc = 0;
@@ -2046,7 +2120,7 @@ static void __init atmci_get_cap(struct atmel_mci *host)
 	host->caps.has_bad_data_ordering = 0;
 
 	/* keep only major version number */
-	switch (version & 0xf00) {
+	switch (host->caps.version & 0xf00) {
 		case 0x000:
 			host->caps.has_pdc = 1;
 			host->caps.has_bad_data_ordering = 1;
@@ -2159,7 +2233,7 @@ static int __init atmci_probe(struct platform_device *pdev)
 	ret = -ENODEV;
 	if (pdata->slot[0].bus_width) {
 		dev_info(&pdev->dev, "init slot 0\n");
-		if (atmci_get_version(host) < 0x100) {
+		if (host->caps.version < 0x100) {
 			/* No SDIO support */
 			ret = atmci_init_slot(host, &pdata->slot[0],
 				0, ATMCI_SDCSEL_SLOT_A, 0);
@@ -2174,7 +2248,7 @@ static int __init atmci_probe(struct platform_device *pdev)
 	}
 	if (pdata->slot[1].bus_width) {
 		dev_info(&pdev->dev, "init slot 1\n");
-		if (atmci_get_version(host) < 0x100) {
+		if (host->caps.version < 0x100) {
 			/* No SDIO support */
 			ret = atmci_init_slot(host, &pdata->slot[1],
 				1, ATMCI_SDCSEL_SLOT_B, 0);
