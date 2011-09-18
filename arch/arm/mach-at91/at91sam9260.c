@@ -317,6 +317,7 @@ static void __init at91sam9260_map_io(void)
 
 static void __init at91sam9260_map_register(void)
 {
+	at91sam926x_timer_init(AT91SAM9260_BASE_PIT);
 }
 
 static void __init at91sam9260_initialize(void)

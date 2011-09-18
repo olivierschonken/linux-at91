@@ -333,6 +333,7 @@ static void __init at91cap9_map_io(void)
 
 static void __init at91cap9_map_register(void)
 {
+	at91sam926x_timer_init(AT91CAP9_BASE_PIT);
 }
 
 static void __init at91cap9_initialize(void)
