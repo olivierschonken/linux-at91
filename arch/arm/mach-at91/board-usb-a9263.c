@@ -64,6 +64,7 @@ static void __init ek_init_early(void)
  */
 static struct at91_usbh_data __initdata ek_usbh_data = {
 	.ports		= 2,
+	.vbus_pin	= {-EINVAL, -EINVAL},
 };
 
 /*
@@ -71,7 +72,7 @@ static struct at91_usbh_data __initdata ek_usbh_data = {
  */
 static struct at91_udc_data __initdata ek_udc_data = {
 	.vbus_pin	= AT91_PIN_PB11,
-	.pullup_pin	= 0,		/* pull-up driven by UDC */
+	.pullup_pin	= -EINVAL,		/* pull-up driven by UDC */
 };
 
 /*
@@ -126,7 +127,7 @@ static struct mtd_partition * __init nand_partitions(int size, int *num_partitio
 static struct atmel_nand_data __initdata ek_nand_data = {
 	.ale		= 21,
 	.cle		= 22,
-//	.det_pin	= ... not connected
+	.det_pin	= -EINVAL,
 	.rdy_pin	= AT91_PIN_PA22,
 	.enable_pin	= AT91_PIN_PD15,
 	.partition_info	= nand_partitions,
