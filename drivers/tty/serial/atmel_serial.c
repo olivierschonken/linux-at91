@@ -33,6 +33,8 @@
 #include <linux/sysrq.h>
 #include <linux/tty_flip.h>
 #include <linux/platform_device.h>
+#include <linux/of.h>
+#include <linux/of_device.h>
 #include <linux/dma-mapping.h>
 #include <linux/atmel_pdc.h>
 #include <linux/atmel_serial.h>
@@ -160,6 +162,16 @@ static struct atmel_uart_port atmel_ports[ATMEL_MAX_UART];
 
 #ifdef SUPPORT_SYSRQ
 static struct console atmel_console;
+#endif
+
+#if defined(CONFIG_OF)
+static const struct of_device_id atmel_serial_dt_ids[] = {
+	{ .compatible = "atmel,at91rm9200-usart" },
+	{ .compatible = "atmel,at91sam9260-usart" },
+	{ /* sentinel */ }
+};
+
+MODULE_DEVICE_TABLE(of, atmel_serial_dt_ids);
 #endif
 
 static inline struct atmel_uart_port *
@@ -1413,14 +1425,31 @@ static struct uart_ops atmel_pops = {
 static void __devinit atmel_init_port(struct atmel_uart_port *atmel_port,
 				      struct platform_device *pdev)
 {
+	struct device_node *np = pdev->dev.of_node;
 	struct uart_port *port = &atmel_port->uart;
 	struct atmel_uart_data *pdata = pdev->dev.platform_data;
+	int ret;
+
+	if (np) {
+		ret = of_alias_get_id(np, "serial");
+		if (ret >= 0)
+			port->line = ret;
+		if (of_get_property(np, "atmel,use-dma-rx", NULL))
+			atmel_port->use_dma_rx	= 1;
+		if (of_get_property(np, "atmel,use-dma-tx", NULL))
+			atmel_port->use_dma_tx	= 1;
+	} else {
+		port->line = pdata->num;
+
+		atmel_port->use_dma_rx	= pdata->use_dma_rx;
+		atmel_port->use_dma_tx	= pdata->use_dma_tx;
+		atmel_port->rs485	= pdata->rs485;
+	}
 
 	port->iotype		= UPIO_MEM;
 	port->flags		= UPF_BOOT_AUTOCONF;
 	port->ops		= &atmel_pops;
 	port->fifosize		= 1;
-	port->line		= pdata->num;
 	port->dev		= &pdev->dev;
 	port->mapbase	= pdev->resource[0].start;
 	port->irq	= pdev->resource[1].start;
@@ -1430,7 +1459,7 @@ static void __devinit atmel_init_port(struct atmel_uart_port *atmel_port,
 
 	memset(&atmel_port->rx_ring, 0, sizeof(atmel_port->rx_ring));
 
-	if (pdata->regs) {
+	if (pdata && pdata->regs) {
 		/* Already mapped by setup code */
 		port->membase = pdata->regs;
 	} else {
@@ -1446,10 +1475,6 @@ static void __devinit atmel_init_port(struct atmel_uart_port *atmel_port,
 		clk_disable(atmel_port->clk);
 		/* only enable clock when USART is in use */
 	}
-
-	atmel_port->use_dma_rx	= pdata->use_dma_rx;
-	atmel_port->use_dma_tx	= pdata->use_dma_tx;
-	atmel_port->rs485	= pdata->rs485;
 
 	/* Use TXEMPTY for interrupt when rs485 else TXRDY or ENDTX|TXBUFE */
 	if (atmel_port->rs485.flags & SER_RS485_ENABLED)
@@ -1710,13 +1735,27 @@ static int atmel_serial_resume(struct platform_device *pdev)
 static int __devinit atmel_serial_probe(struct platform_device *pdev)
 {
 	struct atmel_uart_port *port;
+	struct device_node *np = pdev->dev.of_node;
 	struct atmel_uart_data *pdata = pdev->dev.platform_data;
 	void *data;
 	int ret;
 
 	BUILD_BUG_ON(ATMEL_SERIAL_RINGSIZE & (ATMEL_SERIAL_RINGSIZE - 1));
 
-	port = &atmel_ports[pdata->num];
+	if (np) {
+		ret = of_alias_get_id(np, "serial");
+		if (ret < 0)
+			goto err;
+	} else {
+		if (pdata) {
+			ret = pdata->num;
+		} else {
+			ret = -ENODEV;
+			goto err;
+		}
+	}
+
+	port = &atmel_ports[ret];
 	port->backup_imr = 0;
 
 	atmel_init_port(port, pdev);
@@ -1763,7 +1802,7 @@ err_alloc_ring:
 		clk_put(port->clk);
 		port->clk = NULL;
 	}
-
+err:
 	return ret;
 }
 
@@ -1796,6 +1835,7 @@ static struct platform_driver atmel_serial_driver = {
 	.driver		= {
 		.name	= "atmel_usart",
 		.owner	= THIS_MODULE,
+		.of_match_table	= of_match_ptr(atmel_serial_dt_ids),
 	},
 };
 
