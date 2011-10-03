@@ -64,6 +64,7 @@ struct device_node {
 };
 
 #ifdef CONFIG_OF
+#define of_match_ptr(x)	(x)
 
 /* Pointer for first entry in chain of all nodes. */
 extern struct device_node *allnodes;
@@ -235,6 +236,8 @@ extern void of_detach_node(struct device_node *);
 #endif
 
 #else /* CONFIG_OF */
+
+#define of_match_ptr(x)	(NULL)
 
 static inline bool of_have_populated_dt(void)
 {
