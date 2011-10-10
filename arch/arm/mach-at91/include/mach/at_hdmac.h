@@ -14,16 +14,6 @@
 #include <linux/dmaengine.h>
 
 /**
- * struct at_dma_platform_data - Controller configuration parameters
- * @nr_channels: Number of channels supported by hardware (max 8)
- * @cap_mask: dma_capability flags supported by the platform
- */
-struct at_dma_platform_data {
-	unsigned int	nr_channels;
-	dma_cap_mask_t  cap_mask;
-};
-
-/**
  * enum at_dma_slave_width - DMA slave register access width.
  * @AT_DMA_SLAVE_WIDTH_8BIT: Do 8-bit slave register accesses
  * @AT_DMA_SLAVE_WIDTH_16BIT: Do 16-bit slave register accesses
