@@ -32,6 +32,22 @@
 			usart3: serial@fff98000 {
 				status = "disabled";
 			};
+			smc03: smc@ffffec30 {
+				compatible = "atmel,at91sam9260-smc";
+				reg = <0xffffec30 0x10>;
+				ncs_read_setup = <0>;
+				nrd_setup = <2>;
+				ncs_write_setup = <0>;
+				nwe_setup = <2>;
+				ncs_read_pulse = <4>;
+				nrd_pulse = <4>;
+				ncs_write_pulse = <4>;
+				nwe_pulse = <4>;
+				read_cycle = <7>;
+				write_cycle = <7>;
+				mode = <3>;
+				tdf_cycles = <3>;
+			};
 		};
 	};
 };
