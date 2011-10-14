@@ -14,6 +14,8 @@
 #include <linux/kernel.h>
 #include <linux/clk.h>
 #include <linux/clockchips.h>
+#include <linux/of.h>
+#include <linux/of_address.h>
 
 #include <asm/mach/time.h>
 
@@ -133,7 +135,8 @@ static irqreturn_t at91sam926x_pit_interrupt(int irq, void *dev_id)
 static struct irqaction at91sam926x_pit_irq = {
 	.name		= "at91_tick",
 	.flags		= IRQF_SHARED | IRQF_DISABLED | IRQF_TIMER | IRQF_IRQPOLL,
-	.handler	= at91sam926x_pit_interrupt
+	.handler	= at91sam926x_pit_interrupt,
+	.irq		= AT91_ID_SYS,
 };
 
 static void at91sam926x_pit_reset(void)
@@ -149,6 +152,34 @@ static void at91sam926x_pit_reset(void)
 	pit_write(AT91_PIT_MR, (pit_cycle - 1) | AT91_PIT_PITEN);
 }
 
+#ifdef CONFIG_OF
+static struct of_device_id timer_ids[] = {
+	{ .compatible = "atmel,at91sam9260-pit" },
+};
+
+void __init of_at91sam926x_pit_init(void)
+{
+	struct device_node *np;
+	const unsigned int *intspec;
+
+	np = of_find_matching_node(NULL, timer_ids);
+	if (!np)
+		panic("unable to find compatible timer node in dtb\n");
+	pit_base_addr = of_iomap(np, 0);
+	if (!pit_base_addr)
+		panic("unable to map timer cpu registers\n");
+
+	/* Get the interrupts property */
+	intspec = of_get_property(np, "interrupts", NULL);
+	BUG_ON(!intspec);
+	at91sam926x_pit_irq.irq = be32_to_cpup(intspec);
+
+	of_node_put(np);
+}
+#else
+static void __init of_at91sam926x_pit_init(void) {}
+#endif
+
 /*
  * Set up both clocksource and clockevent support.
  */
@@ -156,6 +187,8 @@ static void __init at91sam926x_pit_init(void)
 {
 	unsigned long	pit_rate;
 	unsigned	bits;
+
+	of_at91sam926x_pit_init();
 
 	/*
 	 * Use our actual MCK to figure out how many MCK/16 ticks per
@@ -177,7 +210,7 @@ static void __init at91sam926x_pit_init(void)
 	clocksource_register_hz(&pit_clk, pit_rate);
 
 	/* Set up irq handler */
-	setup_irq(AT91_ID_SYS, &at91sam926x_pit_irq);
+	setup_irq(at91sam926x_pit_irq.irq, &at91sam926x_pit_irq);
 
 	/* Set up and register clockevents */
 	pit_clkevt.mult = div_sc(pit_rate, NSEC_PER_SEC, pit_clkevt.shift);
