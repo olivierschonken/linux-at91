@@ -301,8 +301,6 @@ static void __init at91sam9x5_map_io(void)
 
 static void __init at91sam9x5_ioremap_registers(void)
 {
-	if (of_at91sam926x_pit_init() < 0)
-		panic("Impossible to find PIT\n");
 }
 
 void __init at91sam9x5_initialize(void)
