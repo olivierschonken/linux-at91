@@ -159,7 +159,7 @@ static struct sam9_smc_config __initdata cpu9krea_nand_smc_config = {
 
 static void __init cpu9krea_add_device_nand(void)
 {
-	sam9_smc_configure(3, &cpu9krea_nand_smc_config);
+	sam9_smc_configure(0, 3, &cpu9krea_nand_smc_config);
 	at91_add_device_nand(&cpu9krea_nand_data);
 }
 

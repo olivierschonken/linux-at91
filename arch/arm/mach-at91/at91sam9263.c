@@ -24,6 +24,7 @@
 #include "soc.h"
 #include "generic.h"
 #include "clock.h"
+#include "sam9_smc.h"
 
 /* --------------------------------------------------------------------
  *  Clocks
@@ -304,6 +305,8 @@ static void __init at91sam9263_map_io(void)
 static void __init at91sam9263_map_register(void)
 {
 	at91sam926x_timer_init(AT91SAM9263_BASE_PIT);
+	sam9_smc_init(0, AT91SAM9263_BASE_SMC0);
+	sam9_smc_init(1, AT91SAM9263_BASE_SMC1);
 }
 
 static void __init at91sam9263_initialize(void)

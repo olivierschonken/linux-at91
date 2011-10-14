@@ -219,7 +219,7 @@ static void __init cap9adk_add_device_nand(void)
 		cap9adk_nand_smc_config.mode |= AT91_SMC_DBW_8;
 
 	/* configure chip-select 3 (NAND) */
-	sam9_smc_configure(3, &cap9adk_nand_smc_config);
+	sam9_smc_configure(0, 3, &cap9adk_nand_smc_config);
 
 	at91_add_device_nand(&cap9adk_nand_data);
 }
