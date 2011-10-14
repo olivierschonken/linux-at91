@@ -331,6 +331,10 @@ static void __init at91cap9_map_io(void)
 	at91_init_sram(0, AT91CAP9_SRAM_BASE, AT91CAP9_SRAM_SIZE);
 }
 
+static void __init at91cap9_map_register(void)
+{
+}
+
 static void __init at91cap9_initialize(void)
 {
 	at91_arch_reset = at91cap9_reset;
@@ -392,6 +396,7 @@ static unsigned int at91cap9_default_irq_priority[NR_AIC_IRQS] __initdata = {
 struct at91_init_soc __initdata at91cap9_soc = {
 	.map_io = at91cap9_map_io,
 	.default_irq_priority = at91cap9_default_irq_priority,
+	.map_register = at91cap9_map_register,
 	.register_clocks = at91cap9_register_clocks,
 	.init = at91cap9_initialize,
 };
