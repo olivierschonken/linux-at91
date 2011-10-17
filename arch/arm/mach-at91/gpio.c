@@ -31,8 +31,9 @@
 struct at91_gpio_chip {
 	struct gpio_chip	chip;
 	struct at91_gpio_chip	*next;		/* Bank sharing same clock */
-	struct at91_gpio_bank	*bank;		/* Bank definition */
+	int			id;		/* ID of register bank */
 	void __iomem		*regbase;	/* Base of register bank */
+	struct clk		*clock;		/* associated clock */
 };
 
 #define to_at91_gpio_chip(c) container_of(c, struct at91_gpio_chip, chip)
@@ -62,11 +63,11 @@ static int at91_gpiolib_direction_input(struct gpio_chip *chip,
 	}
 
 static struct at91_gpio_chip gpio_chip[] = {
-	AT91_GPIO_CHIP("A", 0x00, 32),
-	AT91_GPIO_CHIP("B", 0x20, 32),
-	AT91_GPIO_CHIP("C", 0x40, 32),
-	AT91_GPIO_CHIP("D", 0x60, 32),
-	AT91_GPIO_CHIP("E", 0x80, 32),
+	AT91_GPIO_CHIP("pioA", 0x00, 32),
+	AT91_GPIO_CHIP("pioB", 0x20, 32),
+	AT91_GPIO_CHIP("pioC", 0x40, 32),
+	AT91_GPIO_CHIP("pioD", 0x60, 32),
+	AT91_GPIO_CHIP("pioE", 0x80, 32),
 };
 
 static int gpio_banks;
@@ -288,7 +289,7 @@ static int gpio_irq_set_wake(struct irq_data *d, unsigned state)
 	else
 		wakeups[bank] &= ~mask;
 
-	irq_set_irq_wake(gpio_chip[bank].bank->id, state);
+	irq_set_irq_wake(gpio_chip[bank].id, state);
 
 	return 0;
 }
@@ -305,7 +306,7 @@ void at91_gpio_suspend(void)
 		__raw_writel(wakeups[i], pio + PIO_IER);
 
 		if (!wakeups[i])
-			clk_disable(gpio_chip[i].bank->clock);
+			clk_disable(gpio_chip[i].clock);
 		else {
 #ifdef CONFIG_PM_DEBUG
 			printk(KERN_DEBUG "GPIO-%c may wake for %08x\n", 'A'+i, wakeups[i]);
@@ -322,7 +323,7 @@ void at91_gpio_resume(void)
 		void __iomem	*pio = gpio_chip[i].regbase;
 
 		if (!wakeups[i])
-			clk_enable(gpio_chip[i].bank->clock);
+			clk_enable(gpio_chip[i].clock);
 
 		__raw_writel(wakeups[i], pio + PIO_IDR);
 		__raw_writel(backups[i], pio + PIO_IER);
@@ -502,7 +503,7 @@ void __init at91_gpio_irq_setup(void)
 	for (pioc = 0, this = gpio_chip, prev = NULL;
 			pioc++ < gpio_banks;
 			prev = this, this++) {
-		unsigned	id = this->bank->id;
+		unsigned	id = this->id;
 		unsigned	i;
 
 		__raw_writel(~0, this->regbase + PIO_IDR);
@@ -631,20 +632,26 @@ void __init at91_gpio_init(struct at91_gpio_bank *data, int nr_banks)
 	for (i = 0; i < nr_banks; i++) {
 		at91_gpio = &gpio_chip[i];
 
-		at91_gpio->bank = &data[i];
+		at91_gpio->id = data[i].id;
 		at91_gpio->chip.base = i * 32;
 
-		at91_gpio->regbase = ioremap(at91_gpio->bank->regbase, 512);
+		at91_gpio->regbase = ioremap(data->regbase, 512);
 		if (!at91_gpio->regbase) {
 			pr_err("at91_gpio.%d, failed to map registers, ignoring.\n", i);
 			continue;
 		}
 
+		at91_gpio->clock = clk_get_sys(NULL, at91_gpio->chip.label);
+		if (!at91_gpio->clock) {
+			pr_err("at91_gpio.%d, failed to get clock, ignoring.\n", i);
+			continue;
+		}
+
 		/* enable PIO controller's clock */
-		clk_enable(at91_gpio->bank->clock);
+		clk_enable(at91_gpio->clock);
 
 		/* AT91SAM9263_ID_PIOCDE groups PIOC, PIOD, PIOE */
-		if (last && last->bank->id == at91_gpio->bank->id)
+		if (last && last->id == at91_gpio->id)
 			last->next = at91_gpio;
 		last = at91_gpio;
 

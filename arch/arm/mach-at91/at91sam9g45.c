@@ -216,6 +216,11 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("t0_clk", "atmel_tcb.1", &tcb0_clk),
 	CLKDEV_CON_DEV_ID("pclk", "ssc.0", &ssc0_clk),
 	CLKDEV_CON_DEV_ID("pclk", "ssc.1", &ssc1_clk),
+	CLKDEV_CON_ID("pioA", &pioA_clk),
+	CLKDEV_CON_ID("pioB", &pioB_clk),
+	CLKDEV_CON_ID("pioC", &pioC_clk),
+	CLKDEV_CON_ID("pioD", &pioDE_clk),
+	CLKDEV_CON_ID("pioE", &pioDE_clk),
 };
 
 static struct clk_lookup usart_clocks_lookups[] = {
@@ -282,23 +287,18 @@ static struct at91_gpio_bank at91sam9g45_gpio[] = {
 	{
 		.id		= AT91SAM9G45_ID_PIOA,
 		.regbase	= AT91SAM9G45_BASE_PIOA,
-		.clock		= &pioA_clk,
 	}, {
 		.id		= AT91SAM9G45_ID_PIOB,
 		.regbase	= AT91SAM9G45_BASE_PIOB,
-		.clock		= &pioB_clk,
 	}, {
 		.id		= AT91SAM9G45_ID_PIOC,
 		.regbase	= AT91SAM9G45_BASE_PIOC,
-		.clock		= &pioC_clk,
 	}, {
 		.id		= AT91SAM9G45_ID_PIODE,
 		.regbase	= AT91SAM9G45_BASE_PIOD,
-		.clock		= &pioDE_clk,
 	}, {
 		.id		= AT91SAM9G45_ID_PIODE,
 		.regbase	= AT91SAM9G45_BASE_PIOE,
-		.clock		= &pioDE_clk,
 	}
 };
 
