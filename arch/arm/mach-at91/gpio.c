@@ -19,6 +19,8 @@
 #include <linux/list.h>
 #include <linux/module.h>
 #include <linux/io.h>
+#include <linux/of.h>
+#include <linux/of_address.h>
 
 #include <mach/hardware.h>
 #include <mach/at91_pio.h>
@@ -617,6 +619,30 @@ static void at91_gpiolib_dbg_show(struct seq_file *s, struct gpio_chip *chip)
 	}
 }
 
+#ifndef CONFIG_OF_GPIO
+static void __init at91_gpio_init_one(int i, void __iomem *regbase, int id)
+{
+	struct at91_gpio_chip *at91_gpio = &gpio_chip[id];
+
+	at91_gpio->chip.base = i * 32;
+	at91_gpio->id = id;
+
+	at91_gpio->regbase = ioremap(regbase, 512);
+	if (!at91_gpio->regbase) {
+		pr_err("at91_gpio.%d, failed to map registers, ignoring.\n", i);
+		return;
+	}
+
+	at91_gpio->clock = clk_get_sys(NULL, at91_gpio->chip.label);
+	if (!at91_gpio->clock) {
+		pr_err("at91_gpio.%d, failed to get clock, ignoring.\n", i);
+		return;
+	}
+
+	/* enable PIO controller's clock */
+	clk_enable(at91_gpio->clock);
+}
+
 /*
  * Called from the processor-specific init to enable GPIO pin support.
  */
@@ -632,23 +658,7 @@ void __init at91_gpio_init(struct at91_gpio_bank *data, int nr_banks)
 	for (i = 0; i < nr_banks; i++) {
 		at91_gpio = &gpio_chip[i];
 
-		at91_gpio->id = data[i].id;
-		at91_gpio->chip.base = i * 32;
-
-		at91_gpio->regbase = ioremap(data->regbase, 512);
-		if (!at91_gpio->regbase) {
-			pr_err("at91_gpio.%d, failed to map registers, ignoring.\n", i);
-			continue;
-		}
-
-		at91_gpio->clock = clk_get_sys(NULL, at91_gpio->chip.label);
-		if (!at91_gpio->clock) {
-			pr_err("at91_gpio.%d, failed to get clock, ignoring.\n", i);
-			continue;
-		}
-
-		/* enable PIO controller's clock */
-		clk_enable(at91_gpio->clock);
+		at91_gpio_init_one(i, data[i].regbase, data[i].id);
 
 		/* AT91SAM9263_ID_PIOCDE groups PIOC, PIOD, PIOE */
 		if (last && last->id == at91_gpio->id)
@@ -658,3 +668,77 @@ void __init at91_gpio_init(struct at91_gpio_bank *data, int nr_banks)
 		gpiochip_add(&at91_gpio->chip);
 	}
 }
+#else
+static void __init of_at91_gpio_init_one(struct device_node *np)
+{
+	int i;
+	struct at91_gpio_chip *at91_gpio;
+	const unsigned int *intspec;
+
+	if (!np)
+		return;
+
+	gpio_banks++;
+	i = of_alias_get_id(np, "gpio");
+	at91_gpio = &gpio_chip[i];
+
+	at91_gpio->chip.base = i * 32;
+
+	at91_gpio->regbase = of_iomap(np, 0);
+	if (!at91_gpio->regbase) {
+		pr_err("at91_gpio.%d, failed to map registers, ignoring.\n", i);
+		return;
+	}
+
+	/* Get the interrupts property */
+	intspec = of_get_property(np, "interrupts", NULL);
+	BUG_ON(!intspec);
+	at91_gpio->id = be32_to_cpup(intspec);
+
+	at91_gpio->clock = clk_get_sys(NULL, at91_gpio->chip.label);
+	if (!at91_gpio->clock) {
+		pr_err("at91_gpio.%d, failed to get clock, ignoring.\n", i);
+		return;
+	}
+
+	/* enable PIO controller's clock */
+	clk_enable(at91_gpio->clock);
+
+	at91_gpio->chip.of_node = np;
+}
+
+static void __init of_at91_gpio_init(void)
+{
+	unsigned		i;
+	struct device_node *np = NULL;
+	struct at91_gpio_chip *at91_gpio, *last = NULL;
+
+	gpio_banks = 0;
+
+	/*
+	 * This isn't ideal, but it gets things hooked up until this
+	 * driver is converted into a platform_device
+	 */
+	do {
+		np = of_find_compatible_node(np, NULL, "atmel,at91rm9200-gpio");
+
+		of_at91_gpio_init_one(np);
+	} while (np);
+
+	for (i = 0; i < gpio_banks; i++) {
+		at91_gpio = &gpio_chip[i];
+
+		/* AT91SAM9263_ID_PIOCDE groups PIOC, PIOD, PIOE */
+		if (last && last->id == at91_gpio->id)
+			last->next = at91_gpio;
+		last = at91_gpio;
+
+		gpiochip_add(&at91_gpio->chip);
+	}
+}
+
+void __init at91_gpio_init(struct at91_gpio_bank *data, int nr_banks)
+{
+	of_at91_gpio_init();
+}
+#endif /* CONFIG_OF_GPIO */
