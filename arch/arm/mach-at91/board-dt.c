@@ -33,14 +33,33 @@
 #include "sam9_smc.h"
 #include "generic.h"
 
+static void __init at91sam9g45ek_pinmux(void)
+{
+	at91sam9g45_configure_dbgu_pins();
+	at91sam9g45_configure_usart1_pins(ATMEL_UART_CTS | ATMEL_UART_RTS);
+}
+
+static const struct of_device_id at91_pinmux_of_match[] __initconst = {
+	{ .compatible = "atmel,at91sam9m10g45ek", .data = at91sam9g45ek_pinmux, },
+	{ /* sentinel */ }
+};
 
 static void __init ek_init_early(void)
 {
+	struct device_node *np = NULL;
+	void (*fn)(void);
+
 	/* Initialize processor: 12.000 MHz crystal */
 	at91_initialize(12000000);
 
-	/* DGBU on ttyS0. (Rx & Tx only) */
-	at91_register_uart(0, 0, 0);
+	np = of_find_matching_node(NULL, at91_pinmux_of_match);
+
+	if (np) {
+		of_id = of_match_node(at91_pinmux_of_match, np);
+		fn = of_id->data;
+		fn();
+		of_node_put(np);
+	}
 
 	/* set serial console to ttyS0 (ie, DBGU) */
 	at91_set_serial_console(0);
