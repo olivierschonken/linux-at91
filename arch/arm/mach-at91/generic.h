@@ -52,6 +52,42 @@ static int inline at91_clock_init(unsigned long main_clock) { return 0; }
 #endif
 struct device;
 
+/* Usarts */
+void at91cap9_configure_dbgu_pins(void);
+void at91cap9_configure_usart0_pins(unsigned pins);
+void at91cap9_configure_usart1_pins(unsigned pins);
+void at91cap9_configure_usart2_pins(unsigned pins);
+void at91rm9200_configure_dbgu_pins(void);
+void at91rm9200_configure_usart0_pins(unsigned pins);
+void at91rm9200_configure_usart1_pins(unsigned pins);
+void at91rm9200_configure_usart2_pins(unsigned pins);
+void at91rm9200_configure_usart3_pins(unsigned pins);
+void at91sam9260_configure_dbgu_pins(void);
+void at91sam9260_configure_usart0_pins(unsigned pins);
+void at91sam9260_configure_usart1_pins(unsigned pins);
+void at91sam9260_configure_usart2_pins(unsigned pins);
+void at91sam9260_configure_usart3_pins(unsigned pins);
+void at91sam9260_configure_usart4_pins(void);
+void at91sam9260_configure_usart5_pins(void);
+void at91sam9261_configure_dbgu_pins(void);
+void at91sam9261_configure_usart0_pins(unsigned pins);
+void at91sam9261_configure_usart1_pins(unsigned pins);
+void at91sam9261_configure_usart2_pins(unsigned pins);
+void at91sam9263_configure_dbgu_pins(void);
+void at91sam9263_configure_usart0_pins(unsigned pins);
+void at91sam9263_configure_usart1_pins(unsigned pins);
+void at91sam9263_configure_usart2_pins(unsigned pins);
+void at91sam9g45_configure_dbgu_pins(void);
+void at91sam9g45_configure_usart0_pins(unsigned pins);
+void at91sam9g45_configure_usart1_pins(unsigned pins);
+void at91sam9g45_configure_usart2_pins(unsigned pins);
+void at91sam9g45_configure_usart3_pins(unsigned pins);
+void at91sam9rl_configure_dbgu_pins(void);
+void at91sam9rl_configure_usart0_pins(unsigned pins);
+void at91sam9rl_configure_usart1_pins(unsigned pins);
+void at91sam9rl_configure_usart2_pins(unsigned pins);
+void at91sam9rl_configure_usart3_pins(unsigned pins);
+
  /* Power Management */
 extern void at91_irq_suspend(void);
 extern void at91_irq_resume(void);
