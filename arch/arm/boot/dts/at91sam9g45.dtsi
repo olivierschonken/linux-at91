@@ -59,6 +59,10 @@
 				interrupts = <1>;
 			};
 
+			pinmux {
+				compatible = "atmel,at91rm9200-gpio-pinmux";
+			};
+
 			dma: dma-controller@ffffec00 {
 				compatible = "atmel,at91sam9g45-dma";
 				reg = <0xffffec00 0x200>;

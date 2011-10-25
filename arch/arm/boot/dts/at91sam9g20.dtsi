@@ -60,6 +60,10 @@
 				interrupts = <1>;
 			};
 
+			pinmux {
+				compatible = "atmel,at91rm9200-gpio-pinmux";
+			};
+
 			dbgu: serial@fffff200 {
 				compatible = "atmel,at91sam9260-usart";
 				reg = <0xfffff200 0x200>;
