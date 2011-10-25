@@ -85,9 +85,9 @@ struct pinmux_map {
  * Convenience macro to map a system function onto the primary pinctrl device,
  * to be hogged by the pinmux core until the system shuts down.
  */
-#define PINMUX_MAP_PRIMARY_SYS_HOG(a, b) \
+#define PINMUX_MAP_PRIMARY_SYS_HOG(a, b, g) \
 	{ .name = a, .ctrl_dev_name = "pinctrl.0", .function = b, \
-	  .hog_on_boot = true }
+	  .group = g, .hog_on_boot = true }
 
 
 #ifdef CONFIG_PINMUX

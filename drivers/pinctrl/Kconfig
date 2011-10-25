@@ -40,4 +40,11 @@ config PINMUX_U300
 	help
 	  Say Y here to enable the U300 pinmux driver
 
+config PINMUX_AT91
+	bool "AT91 pinmux driver"
+	depends on ARCH_AT91
+	select PINMUX
+	help
+	  Say Y here to enable the AT91 pinmux driver
+
 endif
