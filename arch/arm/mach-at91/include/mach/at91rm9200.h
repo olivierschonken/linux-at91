@@ -90,11 +90,6 @@
 #define AT91RM9200_BASE_PIOC	0xfffff800	/* PIO Controller C */
 #define AT91RM9200_BASE_PIOD	0xfffffa00	/* PIO Controller D */
 
-#define AT91_USART0	AT91RM9200_BASE_US0
-#define AT91_USART1	AT91RM9200_BASE_US1
-#define AT91_USART2	AT91RM9200_BASE_US2
-#define AT91_USART3	AT91RM9200_BASE_US3
-
 #define AT91_MATRIX	0	/* not supported */
 
 /*
