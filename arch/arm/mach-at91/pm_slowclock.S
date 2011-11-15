@@ -49,9 +49,9 @@
 
 #define pmc	r1
 #define sdramc	r2
-#define tmp1	r3
-#define tmp2	r4
-#define ramc1	r5
+#define ramc1	r3
+#define tmp1	r4
+#define tmp2	r5
 
 /*
  * Wait until master clock is ready (after switching master clock source)
@@ -111,21 +111,19 @@
 
 	.text
 
+/* void at91_slow_clock(void __iomem *pmc, void __iomem *sdramc, void __iomem *ramc1) */
 ENTRY(at91_slow_clock)
 	/* Save registers on stack */
-	stmfd	sp!, {r0 - r12, lr}
+	stmfd	sp!, {r3 - r12, lr}
 
 	/*
 	 * Register usage:
 	 *  R1 = Base address of AT91_PMC
 	 *  R2 = Base address of RAM Controller (SDRAM, DDRSDR, or AT91_SYS)
-	 *  R3 = temporary register
+	 *  R3 = Base address of second RAM Controller or 0 if not present
 	 *  R4 = temporary register
-	 *  R5 = Base address of second RAM Controller or 0 if not present
+	 *  R5 = temporary register
 	 */
-	ldr	pmc, .at91_va_base_pmc
-	ldr	sdramc, .at91_va_base_sdramc
-	ldr	ramc1, .at91_va_base_ramc1
 
 	/* Drain write buffer */
 	mov	r0, #0
@@ -286,7 +284,7 @@ ENTRY(at91_slow_clock)
 #endif
 
 	/* Restore registers, and return */
-	ldmfd	sp!, {r0 - r12, pc}
+	ldmfd	sp!, {r3 - r12, pc}
 
 
 .saved_mckr:
@@ -303,28 +301,6 @@ ENTRY(at91_slow_clock)
 
 .saved_sam9_lpr1:
 	.word 0
-
-.at91_va_base_pmc:
-	.word AT91_VA_BASE_SYS + AT91_PMC
-
-#ifdef CONFIG_ARCH_AT91RM9200
-.at91_va_base_sdramc:
-	.word AT91_VA_BASE_SYS
-#elif defined(CONFIG_ARCH_AT91CAP9) \
-	|| defined(CONFIG_ARCH_AT91SAM9G45)
-.at91_va_base_sdramc:
-	.word AT91_VA_BASE_SYS + AT91_DDRSDRC0
-#else
-.at91_va_base_sdramc:
-	.word AT91_VA_BASE_SYS + AT91_SDRAMC0
-#endif
-
-.at91_va_base_ramc1:
-#if defined(CONFIG_ARCH_AT91SAM9G45)
-	.word AT91_VA_BASE_SYS + AT91_DDRSDRC1
-#else
-	.word 0
-#endif
 
 ENTRY(at91_slow_clock_sz)
 	.word .-at91_slow_clock
