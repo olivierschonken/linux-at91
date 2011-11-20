@@ -489,7 +489,7 @@ static int ohci_hcd_at91_drv_probe(struct platform_device *pdev)
 				continue;
 			gpio_request(pdata->vbus_pin[i], "ohci_vbus");
 			gpio_direction_output(pdata->vbus_pin[i],
-					      !pdata->vbus_pin_inverted ^ 1);
+					      !pdata->vbus_pin_active_low[i] ^ 1);
 		}
 
 		for (i = 0; i < ARRAY_SIZE(pdata->overcurrent_pin); i++) {
