@@ -29,6 +29,9 @@ struct device_node;
  */
 enum of_gpio_flags {
 	OF_GPIO_ACTIVE_LOW = 0x1,
+	OF_GPIO_DEBOUNCE = 0x2,
+	OF_GPIO_PULLUP = 0x4,
+	OF_GPIO_DEGLITH = 0x8,
 };
 
 #ifdef CONFIG_OF_GPIO
