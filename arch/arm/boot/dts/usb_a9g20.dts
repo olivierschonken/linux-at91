@@ -30,6 +30,11 @@
 				phy-mode = "rmii";
 				status = "okay";
 			};
+
+			usb0: ohci@00500000 {
+				num-ports = <2>;
+				status = "okay";
+			};
 		};
 	};
 };
