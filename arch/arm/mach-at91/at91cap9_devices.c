@@ -66,25 +66,11 @@ static struct platform_device at91_usbh_device = {
 
 void __init at91_add_device_usbh(struct at91_usbh_data *data)
 {
-	int i;
-
 	if (!data)
 		return;
 
 	if (cpu_is_at91cap9_revB())
 		irq_set_irq_type(AT91CAP9_ID_UHP, IRQ_TYPE_LEVEL_HIGH);
-
-	/* Enable VBus control for UHP ports */
-	for (i = 0; i < data->ports; i++) {
-		if (gpio_is_valid(data->vbus_pin[i]))
-			at91_set_gpio_output(data->vbus_pin[i], 0);
-	}
-
-	/* Enable overcurrent notification */
-	for (i = 0; i < data->ports; i++) {
-		if (data->overcurrent_pin[i])
-			at91_set_gpio_input(data->overcurrent_pin[i], 1);
-	}
 
 	usbh_data = *data;
 	platform_device_register(&at91_usbh_device);
