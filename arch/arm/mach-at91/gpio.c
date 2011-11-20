@@ -43,6 +43,8 @@ static int at91_gpiolib_request(struct gpio_chip *chip, unsigned offset);
 static void at91_gpiolib_set(struct gpio_chip *chip, unsigned offset, int val);
 static int at91_gpiolib_set_pullup(struct gpio_chip *chip,
 				   unsigned offset, unsigned pullup);
+static int at91_gpiolib_set_deglitch(struct gpio_chip *chip,
+				     unsigned offset, unsigned deglitch);
 static int at91_gpiolib_get(struct gpio_chip *chip, unsigned offset);
 static int at91_gpiolib_direction_output(struct gpio_chip *chip,
 					 unsigned offset, int val);
@@ -59,6 +61,7 @@ static int at91_gpiolib_direction_input(struct gpio_chip *chip,
 			.get		  = at91_gpiolib_get,		\
 			.set		  = at91_gpiolib_set,		\
 			.set_pullup	  = at91_gpiolib_set_pullup,	\
+			.set_deglitch	  = at91_gpiolib_set_deglitch,	\
 			.dbg_show	  = at91_gpiolib_dbg_show,	\
 			.base		  = base_gpio,			\
 			.ngpio		  = nr_gpio,			\
@@ -574,6 +577,17 @@ static int at91_gpiolib_set_pullup(struct gpio_chip *chip,
 	unsigned mask = 1 << offset;
 
 	__raw_writel(mask, pio + (pullup ? PIO_PUER : PIO_PUDR));
+	return 0;
+}
+
+static int at91_gpiolib_set_deglitch(struct gpio_chip *chip,
+				     unsigned offset, unsigned deglitch)
+{
+	struct at91_gpio_chip *at91_gpio = to_at91_gpio_chip(chip);
+	void __iomem *pio = at91_gpio->regbase;
+	unsigned mask = 1 << offset;
+
+	__raw_writel(mask, pio + (deglitch ? PIO_IFER : PIO_IFDR));
 	return 0;
 }
 
