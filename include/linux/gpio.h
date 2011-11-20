@@ -90,6 +90,11 @@ static inline int gpio_set_debounce(unsigned gpio, unsigned debounce)
 	return -ENOSYS;
 }
 
+static inline int gpio_set_pullup(unsigned gpio, unsigned pullup)
+{
+	return -ENOSYS;
+}
+
 static inline int gpio_get_value(unsigned gpio)
 {
 	/* GPIO can never have been requested or set as {in,out}put */
