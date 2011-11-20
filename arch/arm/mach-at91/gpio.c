@@ -39,6 +39,7 @@ struct at91_gpio_chip {
 #define to_at91_gpio_chip(c) container_of(c, struct at91_gpio_chip, chip)
 
 static void at91_gpiolib_dbg_show(struct seq_file *s, struct gpio_chip *chip);
+static int at91_gpiolib_request(struct gpio_chip *chip, unsigned offset);
 static void at91_gpiolib_set(struct gpio_chip *chip, unsigned offset, int val);
 static int at91_gpiolib_get(struct gpio_chip *chip, unsigned offset);
 static int at91_gpiolib_direction_output(struct gpio_chip *chip,
@@ -50,6 +51,7 @@ static int at91_gpiolib_direction_input(struct gpio_chip *chip,
 	{								\
 		.chip = {						\
 			.label		  = name,			\
+			.request	  = at91_gpiolib_request,	\
 			.direction_input  = at91_gpiolib_direction_input, \
 			.direction_output = at91_gpiolib_direction_output, \
 			.get		  = at91_gpiolib_get,		\
@@ -533,6 +535,23 @@ void __init at91_gpio_irq_setup(void)
 }
 
 /* gpiolib support */
+static int at91_gpiolib_request(struct gpio_chip *chip, unsigned offset)
+{
+	struct at91_gpio_chip *at91_gpio = to_at91_gpio_chip(chip);
+	void __iomem *pio = at91_gpio->regbase;
+	unsigned mask = 1 << offset;
+
+	if (!(__raw_readl(pio + PIO_PSR) & mask))
+		pr_warn("at91_gpio, pio %d previously configure as peripheral\n", offset);
+
+	/* diable interrupt */
+	__raw_writel(mask, pio + PIO_IDR);
+	/* set as GPIO */
+	__raw_writel(mask, pio + PIO_PER);
+
+	return 0;
+}
+
 static int at91_gpiolib_direction_input(struct gpio_chip *chip,
 					unsigned offset)
 {
