@@ -25,6 +25,7 @@
 #include <mach/at91_aic.h>
 
 #define NR_AIC_IRQS 32
+#define AIC_BASE_IRQ 0
 
 
 /*
@@ -40,7 +41,7 @@
  * symbols in gpio.h for ones handled indirectly as GPIOs.
  * We make provision for 5 banks of GPIO.
  */
-#define	NR_IRQS		(NR_AIC_IRQS + (5 * 32))
+#define	NR_IRQS		(AIC_BASE_IRQ + NR_AIC_IRQS + (5 * 32))
 
 /* FIQ is AIC source 0. */
 #define FIQ_START AT91_ID_FIQ
