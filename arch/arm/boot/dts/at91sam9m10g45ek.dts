@@ -42,6 +42,10 @@
 				atmel,vbus-gpio = <&pioD 1 12
 						   &pioD 3 12>;
 			};
+
+			usb1: ehci@00800000 {
+				status = "okay";
+			};
 		};
 	};
 };

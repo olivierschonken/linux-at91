@@ -171,6 +171,13 @@
 				interrupts = <22>;
 				status = "disabled";
 			};
+
+			usb1: ehci@00800000 {
+				compatible = "atmel,atmel-ehci", "usb-ohci";
+				reg = <0x00800000 0x100000>;
+				interrupts = <22>;
+				status = "disabled";
+			};
 		};
 	};
 };
