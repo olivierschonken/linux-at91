@@ -193,6 +193,7 @@ struct platform_device *of_platform_device_create_pdata(
 					struct device *parent)
 {
 	struct platform_device *dev;
+	u64 *dmamask;
 
 	if (!of_device_is_available(np))
 		return NULL;
@@ -201,10 +202,16 @@ struct platform_device *of_platform_device_create_pdata(
 	if (!dev)
 		return NULL;
 
+	dmamask = kzalloc(sizeof(u64), GFP_KERNEL);
+	if (!dmamask)
+		goto dmamask_err;
+
 #if defined(CONFIG_MICROBLAZE)
 	dev->archdata.dma_mask = 0xffffffffUL;
 #endif
 	dev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
+	*dmamask = DMA_BIT_MASK(32);
+	dev->dev.dma_mask = dmamask;
 	dev->dev.bus = &platform_bus_type;
 	dev->dev.platform_data = platform_data;
 
@@ -213,12 +220,16 @@ struct platform_device *of_platform_device_create_pdata(
 	 * to do such, possibly using a device notifier
 	 */
 
-	if (of_device_add(dev) != 0) {
-		platform_device_put(dev);
-		return NULL;
-	}
+	if (of_device_add(dev) != 0)
+		goto add_err;
 
 	return dev;
+
+add_err:
+	kfree(dmamask);
+dmamask_err:
+	platform_device_put(dev);
+	return NULL;
 }
 
 /**
