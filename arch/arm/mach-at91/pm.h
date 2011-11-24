@@ -1,5 +1,5 @@
+#include <mach/at91_ramc.h>
 #ifdef CONFIG_ARCH_AT91RM9200
-#include <mach/at91rm9200_mc.h>
 
 /*
  * The AT91RM9200 goes into self-refresh mode with this command, and will
@@ -13,19 +13,18 @@
 
 static inline u32 sdram_selfrefresh_enable(void)
 {
-	u32 saved_lpr = at91_sys_read(AT91_SDRAMC_LPR);
+	u32 saved_lpr = at91_ramc_read(0, AT91_SDRAMC_LPR);
 
-	at91_sys_write(AT91_SDRAMC_LPR, 0);
-	at91_sys_write(AT91_SDRAMC_SRR, 1);
+	at91_ramc_write(0, AT91_SDRAMC_LPR, 0);
+	at91_ramc_write(0, AT91_SDRAMC_SRR, 1);
 	return saved_lpr;
 }
 
-#define sdram_selfrefresh_disable(saved_lpr)	at91_sys_write(AT91_SDRAMC_LPR, saved_lpr)
+#define sdram_selfrefresh_disable(saved_lpr)	at91_ramc_write(0, AT91_SDRAMC_LPR, saved_lpr)
 #define wait_for_interrupt_enable()		asm volatile ("mcr p15, 0, %0, c7, c0, 4" \
 								: : "r" (0))
 
 #elif defined(CONFIG_ARCH_AT91CAP9)
-#include <mach/at91sam9_ddrsdr.h>
 
 
 static inline u32 sdram_selfrefresh_enable(void)
@@ -43,7 +42,6 @@ static inline u32 sdram_selfrefresh_enable(void)
 #define wait_for_interrupt_enable()		cpu_do_idle()
 
 #elif defined(CONFIG_ARCH_AT91SAM9G45)
-#include <mach/at91sam9_ddrsdr.h>
 
 /* We manage both DDRAM/SDRAM controllers, we need more than one value to
  * remember.
@@ -80,7 +78,6 @@ static inline u32 sdram_selfrefresh_enable(void)
 #define wait_for_interrupt_enable()		cpu_do_idle()
 
 #else
-#include <mach/at91sam9_sdramc.h>
 
 #ifdef CONFIG_ARCH_AT91SAM9263
 /*
