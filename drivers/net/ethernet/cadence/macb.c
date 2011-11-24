@@ -83,6 +83,20 @@ static void __init macb_get_hwaddr(struct macb *bp)
 	addr[4] = top & 0xff;
 	addr[5] = (top >> 8) & 0xff;
 
+#ifdef CONFIG_OF
+	/*
+	 * 2) from device tree data
+	 */
+	if (!is_valid_ether_addr(addr)) {
+		struct device_node *np = bp->pdev->dev.of_node;
+		if (np) {
+			const char *mac = of_get_mac_address(np);
+			if (mac)
+				memcpy(addr, mac, sizeof(addr));
+		}
+	}
+#endif
+
 	if (is_valid_ether_addr(addr)) {
 		memcpy(bp->dev->dev_addr, addr, sizeof(addr));
 	} else {
