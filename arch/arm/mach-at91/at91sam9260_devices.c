@@ -683,6 +683,11 @@ static struct resource tcb1_resources[] = {
 	},
 };
 
+static struct of_device_id tcb_ids[] = {
+	{ .compatible = "atmel,tcb" },
+	{ /*sentinel*/ },
+};
+
 static struct platform_device at91sam9260_tcb1_device = {
 	.name		= "atmel_tcb",
 	.id		= 1,
@@ -692,6 +697,13 @@ static struct platform_device at91sam9260_tcb1_device = {
 
 static void __init at91_add_device_tc(void)
 {
+	struct device_node *np;
+
+	np = of_find_matching_node(NULL, tcb_ids);
+	if (np) {
+		of_node_put(np);
+		return;
+	}
 	platform_device_register(&at91sam9260_tcb0_device);
 	platform_device_register(&at91sam9260_tcb1_device);
 }

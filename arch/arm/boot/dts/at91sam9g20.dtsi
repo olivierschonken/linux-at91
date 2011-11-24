@@ -63,6 +63,18 @@
 				interrupts = <1>;
 			};
 
+			tcb0: tcb@fffa0000 {
+				compatible = "atmel,tcb";
+				reg = <0xfffa0000 0x200>;
+				interrupts = <17 18 19>;
+			};
+
+			tcb1: tcb@fffdc000 {
+				compatible = "atmel,tcb";
+				reg = <0xfffdc000 0x200>;
+				interrupts = <26 27 28>;
+			};
+
 			pioA: gpio@fffff400 {
 				compatible = "atmel,at91rm9200-gpio";
 				reg = < 0xfffff400 0x200 >;
