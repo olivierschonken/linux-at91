@@ -90,7 +90,7 @@ static void __init soc_detect(u32 dbgu_base)
 	switch (socid) {
 	case ARCH_ID_AT91CAP9: {
 #ifdef CONFIG_AT91_PMC_UNIT
-		u32 pmc_ver = at91_sys_read(AT91_PMC_VER);
+		u32 pmc_ver = __raw_readl(AT91_IO_P2V(AT91_PMC) + (AT91_PMC_VER));
 
 		if (pmc_ver == ARCH_REVISION_CAP9_B)
 			at91_soc_initdata.subtype = AT91_SOC_CAP9_REV_B;

@@ -35,7 +35,7 @@ static inline void arch_idle(void)
 #ifdef AT91_PS
 	at91_sys_write(AT91_PS_CR, AT91_PS_CR_CPU);
 #else
-	at91_sys_write(AT91_PMC_SCDR, AT91_PMC_PCK);
+	at91_pmc_write(AT91_PMC_SCDR, AT91_PMC_PCK);
 #endif
 #ifndef CONFIG_CPU_ARM920T
 	/*
