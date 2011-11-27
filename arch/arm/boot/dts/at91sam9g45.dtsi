@@ -101,6 +101,11 @@
 				atmel,use-dma-tx;
 				status = "disabled";
 			};
+
+			smc: smc@ffffe800 {
+				compatible = "atmel,at91sam9260-smc";
+				reg = <0xffffe800 0x200>;
+			}
 		};
 	};
 };

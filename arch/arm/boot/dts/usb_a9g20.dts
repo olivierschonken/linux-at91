@@ -25,6 +25,25 @@
 			dbgu: serial@fffff200 {
 				status = "okay";
 			};
+
+			smc: smc@ffffec00 {
+				nand_cs@03 {
+					atmel,bank = <0>
+					atmel,chipselect = <3>
+					atmel,ncs_read_setup = <0>;
+					atmel,nrd_setup = <2>;
+					atmel,ncs_write_setup = <0>;
+					atmel,nwe_setup = <2>;
+					atmel,ncs_read_pulse = <4>;
+					atmel,nrd_pulse = <4>;
+					atmel,ncs_write_pulse = <4>;
+					atmel,nwe_pulse = <4>;
+					atmel,read_cycle = <7>;
+					atmel,write_cycle = <7>;
+					atmel,mode = <3>;
+					atmel,tdf_cycles = <3>;
+				};
+			};
 		};
 	};
 };

@@ -140,7 +140,109 @@ void __init at91sam9_ioremap_smc(int id, u32 addr)
 		pr_warn("%s: id > 2\n", __func__);
 		return;
 	}
+
+	/* check if specified by DT */
+	if (smc_base_addr[id])
+		return;
+
 	smc_base_addr[id] = ioremap(addr, 512);
 	if (!smc_base_addr[id])
 		pr_warn("Impossible to ioremap smc.%d 0x%x\n", id, addr);
 }
+
+#ifdef CONFIG_OF
+static struct of_device_id smc_ids[] = {
+	{ .compatible = "atmel,at91sam9260-smc" },
+};
+
+int __init sam9_smc_of_config(struct device_node *np)
+{
+	struct sam9_smc_config config;
+	const unsigned int *prop;
+	int bank = -1;
+	int cs = -1;
+
+	if (!np)
+		return -EIO;
+
+	prop = of_get_property(np, "atmel,bank", NULL);
+	if (prop)
+		bank = be32_to_cpup(prop);
+
+	prop = of_get_property(np, "atmel,chipselect", NULL);
+	if (prop)
+		cs = be32_to_cpup(prop);
+
+	if (cs < 0 || bank < 0)
+		return -EINVAL;
+
+	prop = of_get_property(np, "atmel,ncs_read_setup", NULL);
+	if (prop)
+		config.ncs_read_setup = be32_to_cpup(prop);
+
+	prop = of_get_property(np, "atmel,nrd_setup", NULL);
+	if (prop)
+		config.nrd_setup = be32_to_cpup(prop);
+
+	prop = of_get_property(np, "atmel,ncs_write_setup", NULL);
+	if (prop)
+		config.ncs_write_setup = be32_to_cpup(prop);
+
+	prop = of_get_property(np, "atmel,nwe_setup", NULL);
+	if (prop)
+		config.nwe_setup = be32_to_cpup(prop);
+
+	prop = of_get_property(np, "atmel,ncs_read_pulse", NULL);
+	if (prop)
+		config.ncs_read_pulse = be32_to_cpup(prop);
+
+	prop = of_get_property(np, "atmel,nrd_pulse", NULL);
+	if (prop)
+		config.nrd_pulse = be32_to_cpup(prop);
+
+	prop = of_get_property(np, "atmel,ncs_write_pulse", NULL);
+	if (prop)
+		config.ncs_write_pulse = be32_to_cpup(prop);
+
+	prop = of_get_property(np, "atmel,nwe_pulse", NULL);
+	if (prop)
+		config.nwe_pulse = be32_to_cpup(prop);
+
+	prop = of_get_property(np, "atmel,read_cycle", NULL);
+	if (prop)
+		config.read_cycle = be32_to_cpup(prop);
+
+	prop = of_get_property(np, "atmel,write_cycle", NULL);
+	if (prop)
+		config.write_cycle = be32_to_cpup(prop);
+
+	prop = of_get_property(np, "atmel,mode", NULL);
+	if (prop)
+		config.mode = be32_to_cpup(prop);
+
+	prop = of_get_property(np, "atmel,tdf_cycles", NULL);
+	if (prop)
+		config.tdf_cycles = be32_to_cpup(prop);
+
+	return sam9_smc_configure(id, cs, &config);
+}
+
+static int __init sam9_smc_of_init(void)
+{
+	struct device_node *np, *pp;
+
+	np = of_find_matching_node(NULL, smc_ids);
+
+	smc_base_addr[0] = of_iomap(np, 0);
+	smc_base_addr[1] = of_iomap(np, 1);
+
+	of_node_put(np);
+
+	pp = NULL;
+	while ((pp = of_get_next_child(np, pp)))
+		sam9_smc_of_config(pp);
+
+	return 0;
+}
+early_initcall(sam9_smc_of_init);
+#endif
