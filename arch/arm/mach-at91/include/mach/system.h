@@ -33,7 +33,7 @@ static inline void arch_idle(void)
 	 * re-enabled by an interrupt or by a reset.
 	 */
 #ifdef AT91_PS
-	at91_sys_write(AT91_PS_CR, AT91_PS_CR_CPU);
+	__raw_writel(AT91_PS_CR_CPU, AT91_PS_CR);
 #else
 	at91_pmc_write(AT91_PMC_SCDR, AT91_PMC_PCK);
 #endif
