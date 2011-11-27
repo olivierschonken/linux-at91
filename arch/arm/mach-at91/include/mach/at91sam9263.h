@@ -74,7 +74,6 @@
 /*
  * System Peripherals (offset from AT91_BASE_SYS)
  */
-#define AT91_MATRIX	(0xffffec00 - AT91_BASE_SYS)
 #define AT91_GPBR	(0xfffffd60 - AT91_BASE_SYS)
 
 #define AT91SAM9263_BASE_ECC0	0xffffe000
@@ -83,6 +82,7 @@
 #define AT91SAM9263_BASE_ECC1	0xffffe600
 #define AT91SAM9263_BASE_SDRAMC1 0xffffe800
 #define AT91SAM9263_BASE_SMC1	0xffffea00
+#define AT91SAM9263_BASE_MATRIX	0xffffec00
 #define AT91SAM9263_BASE_DBGU	AT91_BASE_DBGU1
 #define AT91SAM9263_BASE_PIOA	0xfffff200
 #define AT91SAM9263_BASE_PIOB	0xfffff400

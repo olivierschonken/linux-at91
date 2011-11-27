@@ -26,6 +26,7 @@
 #include <mach/cpu.h>
 #include <mach/at91cap9.h>
 #include <mach/at91cap9_matrix.h>
+#include <mach/at91_matrix.h>
 #include <mach/at91sam9_smc.h>
 
 #include "generic.h"
@@ -150,11 +151,11 @@ void __init at91_add_device_usba(struct usba_platform_data *data)
 {
 	if (cpu_is_at91cap9_revB()) {
 		irq_set_irq_type(AT91CAP9_ID_UDPHS, IRQ_TYPE_LEVEL_HIGH);
-		at91_sys_write(AT91_MATRIX_UDPHS, AT91_MATRIX_SELECT_UDPHS |
+		at91_matrix_write(AT91_MATRIX_UDPHS, AT91_MATRIX_SELECT_UDPHS |
 						  AT91_MATRIX_UDPHS_BYPASS_LOCK);
 	}
 	else
-		at91_sys_write(AT91_MATRIX_UDPHS, AT91_MATRIX_SELECT_UDPHS);
+		at91_matrix_write(AT91_MATRIX_UDPHS, AT91_MATRIX_SELECT_UDPHS);
 
 	/*
 	 * Invalid pins are 0 on AT91, but the usba driver is shared
@@ -407,8 +408,8 @@ void __init at91_add_device_nand(struct atmel_nand_data *data)
 	if (!data)
 		return;
 
-	csa = at91_sys_read(AT91_MATRIX_EBICSA);
-	at91_sys_write(AT91_MATRIX_EBICSA, csa | AT91_MATRIX_EBI_CS3A_SMC_SMARTMEDIA);
+	csa = at91_matrix_read(AT91_MATRIX_EBICSA);
+	at91_matrix_write(AT91_MATRIX_EBICSA, csa | AT91_MATRIX_EBI_CS3A_SMC_SMARTMEDIA);
 
 	/* enable pin */
 	if (gpio_is_valid(data->enable_pin))

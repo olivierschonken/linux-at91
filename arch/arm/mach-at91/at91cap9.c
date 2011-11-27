@@ -329,6 +329,7 @@ static void __init at91cap9_ioremap_registers(void)
 	at91_ioremap_ramc(0, AT91CAP9_BASE_DDRSDRC, 512);
 	at91sam926x_ioremap_pit(AT91CAP9_BASE_PIT);
 	at91sam9_ioremap_smc(0, AT91CAP9_BASE_SMC);
+	at91_ioremap_matrix(AT91CAP9_BASE_MATRIX);
 }
 
 static void __init at91cap9_initialize(void)

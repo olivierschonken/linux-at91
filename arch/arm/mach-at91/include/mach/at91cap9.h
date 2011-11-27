@@ -80,13 +80,13 @@
  * System Peripherals (offset from AT91_BASE_SYS)
  */
 #define AT91_BCRAMC	(0xffffe400 - AT91_BASE_SYS)
-#define AT91_MATRIX	(0xffffea00 - AT91_BASE_SYS)
 #define AT91_GPBR	(cpu_is_at91cap9_revB() ?	\
 			(0xfffffd50 - AT91_BASE_SYS) :	\
 			(0xfffffd60 - AT91_BASE_SYS))
 
 #define AT91CAP9_BASE_ECC	0xffffe200
 #define AT91CAP9_BASE_DDRSDRC	0xffffe600
+#define AT91CAP9_BASE_MATRIX	0xffffea00
 #define AT91CAP9_BASE_DMA	0xffffec00
 #define AT91CAP9_BASE_SMC	0xffffe800
 #define AT91CAP9_BASE_DBGU	AT91_BASE_DBGU1

@@ -43,6 +43,7 @@
 
 #include <mach/board.h>
 #include <mach/at91cap9_matrix.h>
+#include <mach/at91_matrix.h>
 #include <mach/at91sam9_smc.h>
 #include <mach/system_rev.h>
 
@@ -206,8 +207,8 @@ static void __init cap9adk_add_device_nand(void)
 {
 	unsigned long csa;
 
-	csa = at91_sys_read(AT91_MATRIX_EBICSA);
-	at91_sys_write(AT91_MATRIX_EBICSA, csa | AT91_MATRIX_EBI_VDDIOMSEL_3_3V);
+	csa = at91_matrix_read(AT91_MATRIX_EBICSA);
+	at91_matrix_write(AT91_MATRIX_EBICSA, csa | AT91_MATRIX_EBI_VDDIOMSEL_3_3V);
 
 	cap9adk_nand_data.bus_width_16 = board_have_nand_16bit();
 	/* setup bus-width (8 or 16) */
@@ -283,8 +284,8 @@ static __init void cap9adk_add_device_nor(void)
 {
 	unsigned long csa;
 
-	csa = at91_sys_read(AT91_MATRIX_EBICSA);
-	at91_sys_write(AT91_MATRIX_EBICSA, csa | AT91_MATRIX_EBI_VDDIOMSEL_3_3V);
+	csa = at91_matrix_read(AT91_MATRIX_EBICSA);
+	at91_matrix_write(AT91_MATRIX_EBICSA, csa | AT91_MATRIX_EBI_VDDIOMSEL_3_3V);
 
 	/* configure chip-select 0 (NOR) */
 	sam9_smc_configure(0, 0, &cap9adk_nor_smc_config);
