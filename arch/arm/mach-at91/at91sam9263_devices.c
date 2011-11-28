@@ -22,7 +22,6 @@
 
 #include <mach/board.h>
 #include <mach/at91sam9263.h>
-#include <mach/at91sam9263_matrix.h>
 #include <mach/at91_matrix.h>
 #include <mach/at91sam9_smc.h>
 
@@ -385,7 +384,6 @@ static struct platform_device cf1_device = {
 
 void __init at91_add_device_cf(struct at91_cf_data *data)
 {
-	unsigned long ebi0_csa;
 	struct platform_device *pdev;
 
 	if (!data)
@@ -396,17 +394,14 @@ void __init at91_add_device_cf(struct at91_cf_data *data)
 	 * we assume SMC timings are configured by board code,
 	 * except True IDE where timings are controlled by driver
 	 */
-	ebi0_csa = at91_matrix_read(AT91_MATRIX_EBI0CSA);
 	switch (data->chipselect) {
 	case 4:
 		at91_set_A_periph(AT91_PIN_PD6, 0);  /* EBI0_NCS4/CFCS0 */
-		ebi0_csa |= AT91_MATRIX_EBI0_CS4A_SMC_CF1;
 		cf0_data = *data;
 		pdev = &cf0_device;
 		break;
 	case 5:
 		at91_set_A_periph(AT91_PIN_PD7, 0);  /* EBI0_NCS5/CFCS1 */
-		ebi0_csa |= AT91_MATRIX_EBI0_CS5A_SMC_CF2;
 		cf1_data = *data;
 		pdev = &cf1_device;
 		break;
@@ -415,7 +410,7 @@ void __init at91_add_device_cf(struct at91_cf_data *data)
 		       data->chipselect);
 		return;
 	}
-	at91_matrix_write(AT91_MATRIX_EBI0CSA, ebi0_csa);
+	at91_matrix_configure_cf(0, data->chipselect);
 
 	if (gpio_is_valid(data->det_pin)) {
 		at91_set_gpio_input(data->det_pin, 1);
@@ -478,13 +473,10 @@ static struct platform_device at91sam9263_nand_device = {
 
 void __init at91_add_device_nand(struct atmel_nand_data *data)
 {
-	unsigned long csa;
-
 	if (!data)
 		return;
 
-	csa = at91_matrix_read(AT91_MATRIX_EBI0CSA);
-	at91_matrix_write(AT91_MATRIX_EBI0CSA, csa | AT91_MATRIX_EBI0_CS3A_SMC_SMARTMEDIA);
+	at91_matrix_configure_nand(0, AT91_EBI_NONE);
 
 	/* enable pin */
 	if (gpio_is_valid(data->enable_pin))

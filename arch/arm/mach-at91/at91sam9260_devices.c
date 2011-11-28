@@ -20,7 +20,6 @@
 #include <mach/board.h>
 #include <mach/cpu.h>
 #include <mach/at91sam9260.h>
-#include <mach/at91sam9260_matrix.h>
 #include <mach/at91_matrix.h>
 #include <mach/at91sam9_smc.h>
 
@@ -410,13 +409,10 @@ static struct platform_device at91sam9260_nand_device = {
 
 void __init at91_add_device_nand(struct atmel_nand_data *data)
 {
-	unsigned long csa;
-
 	if (!data)
 		return;
 
-	csa = at91_matrix_read(AT91_MATRIX_EBICSA);
-	at91_matrix_write(AT91_MATRIX_EBICSA, csa | AT91_MATRIX_CS3A_SMC_SMARTMEDIA);
+	at91_matrix_configure_nand(0, AT91_EBI_NONE);
 
 	/* enable pin */
 	if (gpio_is_valid(data->enable_pin))
@@ -1264,25 +1260,20 @@ static struct platform_device cf1_device = {
 void __init at91_add_device_cf(struct at91_cf_data *data)
 {
 	struct platform_device *pdev;
-	unsigned long csa;
 
 	if (!data)
 		return;
-
-	csa = at91_matrix_read(AT91_MATRIX_EBICSA);
 
 	switch (data->chipselect) {
 	case 4:
 		at91_set_multi_drive(AT91_PIN_PC8, 0);
 		at91_set_A_periph(AT91_PIN_PC8, 0);
-		csa |= AT91_MATRIX_CS4A_SMC_CF1;
 		cf0_data = *data;
 		pdev = &cf0_device;
 		break;
 	case 5:
 		at91_set_multi_drive(AT91_PIN_PC9, 0);
 		at91_set_A_periph(AT91_PIN_PC9, 0);
-		csa |= AT91_MATRIX_CS5A_SMC_CF2;
 		cf1_data = *data;
 		pdev = &cf1_device;
 		break;
@@ -1292,7 +1283,7 @@ void __init at91_add_device_cf(struct at91_cf_data *data)
 		return;
 	}
 
-	at91_matrix_write(AT91_MATRIX_EBICSA, csa);
+	at91_matrix_configure_cf(0, data->chipselect);
 
 	if (gpio_is_valid(data->rst_pin)) {
 		at91_set_multi_drive(data->rst_pin, 0);

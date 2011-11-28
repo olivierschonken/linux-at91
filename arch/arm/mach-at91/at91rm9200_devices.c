@@ -21,6 +21,7 @@
 #include <mach/board.h>
 #include <mach/at91rm9200.h>
 #include <mach/at91_ramc.h>
+#include <mach/at91_matrix.h>
 
 #include "generic.h"
 
@@ -225,16 +226,13 @@ static struct platform_device at91rm9200_cf_device = {
 
 void __init at91_add_device_cf(struct at91_cf_data *data)
 {
-	unsigned int csa;
-
 	if (!data)
 		return;
 
 	data->chipselect = 4;		/* can only use EBI ChipSelect 4 */
 
 	/* CF takes over CS4, CS5, CS6 */
-	csa = at91_ramc_read(0, AT91_EBI_CSA);
-	at91_ramc_write(0, AT91_EBI_CSA, csa | AT91_EBI_CS4A_SMC_COMPACTFLASH);
+	at91_matrix_configure_cf(0, data->chipselect);
 
 	/*
 	 * Static memory controller timing adjustments.
@@ -393,14 +391,11 @@ static struct platform_device at91rm9200_nand_device = {
 
 void __init at91_add_device_nand(struct atmel_nand_data *data)
 {
-	unsigned int csa;
-
 	if (!data)
 		return;
 
 	/* enable the address range of CS3 */
-	csa = at91_ramc_read(0, AT91_EBI_CSA);
-	at91_ramc_write(0, AT91_EBI_CSA, csa | AT91_EBI_CS3A_SMC_SMARTMEDIA);
+	at91_matrix_configure_nand(0, AT91_EBI_NONE);
 
 	/* set the bus interface characteristics */
 	at91_ramc_write(0, AT91_SMC_CSR(3), AT91_SMC_ACSS_STD | AT91_SMC_DBW_8 | AT91_SMC_WSEN

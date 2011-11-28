@@ -23,7 +23,6 @@
 
 #include <mach/board.h>
 #include <mach/at91sam9261.h>
-#include <mach/at91sam9261_matrix.h>
 #include <mach/at91_matrix.h>
 #include <mach/at91sam9_smc.h>
 
@@ -224,13 +223,10 @@ static struct platform_device atmel_nand_device = {
 
 void __init at91_add_device_nand(struct atmel_nand_data *data)
 {
-	unsigned long csa;
-
 	if (!data)
 		return;
 
-	csa = at91_matrix_read(AT91_MATRIX_EBICSA);
-	at91_matrix_write(AT91_MATRIX_EBICSA, csa | AT91_MATRIX_CS3A_SMC_SMARTMEDIA);
+	at91_matrix_configure_nand(0, AT91_EBI_NONE);
 
 	/* enable pin */
 	if (gpio_is_valid(data->enable_pin))

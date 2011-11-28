@@ -17,6 +17,8 @@
 #include <asm/mach/map.h>
 #include <mach/cpu.h>
 #include <mach/at91sam9261.h>
+#include <mach/at91sam9261_matrix.h>
+#include <mach/at91_matrix.h>
 #include <mach/at91_pmc.h>
 #include <mach/at91_rstc.h>
 
@@ -265,6 +267,85 @@ static struct at91_gpio_bank at91sam9261_gpio[] __initdata = {
 		.regbase	= AT91SAM9261_BASE_PIOC,
 	}
 };
+
+/* --------------------------------------------------------------------
+ * EBI
+ * -------------------------------------------------------------------- */
+int __init at91_matrix_configure_nand(int ebi, int mode)
+{
+	u32 csa;
+
+	if (ebi != 0)
+		return -EINVAL;
+
+	csa = at91_matrix_read(AT91_MATRIX_EBICSA);
+
+	at91_matrix_write(AT91_MATRIX_EBICSA,
+			csa | AT91_MATRIX_CS3A_SMC_SMARTMEDIA);
+
+	return 0;
+}
+
+int at91_matrix_configure_cf(int ebi, int cs)
+{
+	u32 csa;
+
+	if (ebi != 0)
+		return -EINVAL;
+
+	csa = at91_matrix_read(AT91_MATRIX_EBICSA);
+
+	switch (cs) {
+	case 4:
+		csa |= AT91_MATRIX_CS4A_SMC_CF1;
+		break;
+	case 5:
+		csa |= AT91_MATRIX_CS5A_SMC_CF2;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	at91_matrix_write(AT91_MATRIX_EBICSA, csa);
+
+	return 0;
+}
+
+int at91_matrix_configure_smc(int ebi, int cs)
+{
+	u32 csa;
+
+	if (ebi != 0)
+		return -EINVAL;
+
+	csa = at91_matrix_read(AT91_MATRIX_EBICSA);
+
+	switch (cs) {
+	case 1:
+		csa |= AT91_MATRIX_CS1A_SMC;
+		break;
+	case 3:
+		csa |= AT91_MATRIX_CS3A_SMC;
+		break;
+	case 4:
+		csa |= AT91_MATRIX_CS4A_SMC;
+		break;
+	case 5:
+		csa |= AT91_MATRIX_CS5A_SMC;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	at91_matrix_write(AT91_MATRIX_EBICSA, csa);
+
+	return 0;
+}
+
+int at91_matrix_configure_voltage(int ebi, int mode)
+{
+	return -ENOSYS;
+}
 
 /* --------------------------------------------------------------------
  *  AT91SAM9261 processor initialization

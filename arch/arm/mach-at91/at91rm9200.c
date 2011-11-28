@@ -16,6 +16,8 @@
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
 #include <mach/at91rm9200.h>
+#include <mach/at91_ramc.h>
+#include <mach/at91_matrix.h>
 #include <mach/at91_pmc.h>
 #include <mach/at91_st.h>
 #include <mach/cpu.h>
@@ -288,6 +290,72 @@ static struct at91_gpio_bank at91rm9200_gpio[] __initdata = {
 		.regbase	= AT91RM9200_BASE_PIOD,
 	}
 };
+
+/* --------------------------------------------------------------------
+ * EBI
+ * -------------------------------------------------------------------- */
+int __init at91_matrix_configure_nand(int ebi, int mode)
+{
+	u32 csa;
+
+	if (ebi != 0)
+		return -EINVAL;
+
+	csa = at91_ramc_read(0, AT91_EBI_CSA);
+
+	at91_ramc_write(0, AT91_EBI_CSA, csa | AT91_EBI_CS3A_SMC_SMARTMEDIA);
+
+	return 0;
+}
+
+int at91_matrix_configure_cf(int ebi, int cs)
+{
+	u32 csa;
+
+	if (ebi != 0 || cs != 4)
+		return -EINVAL;
+
+	csa = at91_ramc_read(0, AT91_EBI_CSA);
+	at91_ramc_write(0, AT91_EBI_CSA, csa | AT91_EBI_CS4A_SMC_COMPACTFLASH);
+
+	return 0;
+}
+
+int at91_matrix_configure_smc(int ebi, int cs)
+{
+	u32 csa;
+
+	if (ebi != 0)
+		return -EINVAL;
+
+	csa = at91_ramc_read(0, AT91_EBI_CSA);
+
+	switch (cs) {
+	case 0:
+		csa |= AT91_EBI_CS0A_SMC;
+		break;
+	case 1:
+		csa |= AT91_EBI_CS1A_SMC;
+		break;
+	case 3:
+		csa |= AT91_EBI_CS3A_SMC;
+		break;
+	case 4:
+		csa |= AT91_EBI_CS4A_SMC;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	at91_ramc_write(0, AT91_EBI_CSA, csa);
+
+	return 0;
+}
+
+int at91_matrix_configure_voltage(int ebi, int mode)
+{
+	return -ENOSYS;
+}
 
 static void at91rm9200_restart(char mode, const char *cmd)
 {

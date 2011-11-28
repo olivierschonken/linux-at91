@@ -16,6 +16,8 @@
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
 #include <mach/at91sam9263.h>
+#include <mach/at91sam9263_matrix.h>
+#include <mach/at91_matrix.h>
 #include <mach/at91_pmc.h>
 #include <mach/at91_rstc.h>
 
@@ -287,6 +289,146 @@ static struct at91_gpio_bank at91sam9263_gpio[] __initdata = {
 		.regbase	= AT91SAM9263_BASE_PIOE,
 	}
 };
+
+/* --------------------------------------------------------------------
+ * EBI
+ * -------------------------------------------------------------------- */
+int __init at91_matrix_configure_nand(int ebi, int mode)
+{
+	u32 csa;
+
+	if (ebi < 0 || ebi > 1)
+		return -EINVAL;
+
+	if (ebi) {
+		csa = at91_matrix_read(AT91_MATRIX_EBI1CSA);
+
+		at91_matrix_write(AT91_MATRIX_EBI1CSA,
+				csa | AT91_MATRIX_EBI1_CS2A_SMC_SMARTMEDIA);
+	} else {
+		csa = at91_matrix_read(AT91_MATRIX_EBI0CSA);
+
+		at91_matrix_write(AT91_MATRIX_EBI0CSA,
+				csa | AT91_MATRIX_EBI0_CS3A_SMC_SMARTMEDIA);
+	}
+
+	return 0;
+}
+
+int at91_matrix_configure_cf(int ebi, int cs)
+{
+	u32 csa;
+
+	if (ebi != 0)
+		return -EINVAL;
+
+	csa = at91_matrix_read(AT91_MATRIX_EBI0CSA);
+
+	switch (cs) {
+	case 4:
+		csa |= AT91_MATRIX_EBI0_CS4A_SMC_CF1;
+		break;
+	case 5:
+		csa |= AT91_MATRIX_EBI0_CS5A_SMC_CF2;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	at91_matrix_write(AT91_MATRIX_EBI0CSA, csa);
+
+	return 0;
+}
+
+int at91_matrix_configure_smc(int ebi, int cs)
+{
+	u32 csa;
+
+	if (ebi < 0 || ebi > 1)
+		return -EINVAL;
+
+	if (ebi) {
+		csa = at91_matrix_read(AT91_MATRIX_EBI1CSA);
+
+		switch (cs) {
+		case 1:
+			csa |= AT91_MATRIX_EBI1_CS1A_SMC;
+			break;
+		case 2:
+			csa |= AT91_MATRIX_EBI1_CS2A_SMC;
+			break;
+		default:
+			return -EINVAL;
+		}
+
+		at91_matrix_write(AT91_MATRIX_EBI1CSA, csa);
+	} else {
+		csa = at91_matrix_read(AT91_MATRIX_EBI0CSA);
+
+		switch (cs) {
+		case 1:
+			csa |= AT91_MATRIX_EBI0_CS1A_SMC;
+			break;
+		case 3:
+			csa |= AT91_MATRIX_EBI0_CS3A_SMC;
+			break;
+		case 4:
+			csa |= AT91_MATRIX_EBI0_CS4A_SMC;
+			break;
+		case 5:
+			csa |= AT91_MATRIX_EBI0_CS5A_SMC;
+			break;
+		default:
+			return -EINVAL;
+		}
+
+		at91_matrix_write(AT91_MATRIX_EBI0CSA, csa);
+	}
+
+	return 0;
+}
+
+int at91_matrix_configure_voltage(int ebi, int mode)
+{
+	u32 csa;
+
+	if (ebi < 0 || ebi > 1)
+		return -EINVAL;
+
+	if (ebi) {
+		csa = at91_matrix_read(AT91_MATRIX_EBI1CSA);
+
+		switch (mode) {
+		case AT91_EBI_VDDIOMSEL_3_3V:
+			csa |= AT91_MATRIX_EBI1_VDDIOMSEL_3_3V;
+			break;
+		case AT91_EBI_VDDIOMSEL_1_8V:
+			csa |= AT91_MATRIX_EBI1_VDDIOMSEL_1_8V;
+			break;
+		default:
+			return -EINVAL;
+		}
+
+		at91_matrix_write(AT91_MATRIX_EBI1CSA, csa);
+	} else {
+		csa = at91_matrix_read(AT91_MATRIX_EBI0CSA);
+
+		switch (mode) {
+		case AT91_EBI_VDDIOMSEL_3_3V:
+			csa |= AT91_MATRIX_EBI0_VDDIOMSEL_3_3V;
+			break;
+		case AT91_EBI_VDDIOMSEL_1_8V:
+			csa |= AT91_MATRIX_EBI0_VDDIOMSEL_1_8V;
+			break;
+		default:
+			return -EINVAL;
+		}
+
+		at91_matrix_write(AT91_MATRIX_EBI0CSA, csa);
+	}
+
+	return 0;
+}
 
 /* --------------------------------------------------------------------
  *  AT91SAM9263 processor initialization

@@ -42,7 +42,6 @@
 #include <mach/hardware.h>
 #include <mach/board.h>
 #include <mach/at91sam9_smc.h>
-#include <mach/at91sam9260_matrix.h>
 #include <mach/at91_matrix.h>
 
 #include "sam9_smc.h"
@@ -238,10 +237,7 @@ static struct sam9_smc_config __initdata cpu9krea_nor_smc_config = {
 
 static __init void cpu9krea_add_device_nor(void)
 {
-	unsigned long csa;
-
-	csa = at91_matrix_read(AT91_MATRIX_EBICSA);
-	at91_matrix_write(AT91_MATRIX_EBICSA, csa | AT91_MATRIX_VDDIOMSEL_3_3V);
+	at91_matrix_configure_voltage(0, AT91_EBI_VDDIOMSEL_3_3V);
 
 	/* configure chip-select 0 (NOR) */
 	sam9_smc_configure(0, 0, &cpu9krea_nor_smc_config);
