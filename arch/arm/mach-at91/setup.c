@@ -9,6 +9,8 @@
 #include <linux/io.h>
 #include <linux/mm.h>
 #include <linux/pm.h>
+#include <linux/of.h>
+#include <linux/of_address.h>
 
 #include <asm/mach/map.h>
 
@@ -276,11 +278,43 @@ static void at91sam9_poweroff(void)
 	at91_shdwc_write(AT91_SHDW_CR, AT91_SHDW_KEY | AT91_SHDW_SHDW);
 }
 
+#ifdef CONFIG_OF
+static struct of_device_id shdc_ids[] = {
+	{ .compatible = "atmel,at91sam9260-shdc" },
+};
+
+static int __init of_at91_shdc_init(void)
+{
+	struct device_node *np;
+
+	np = of_find_matching_node(NULL, shdc_ids);
+	if (!np)
+		return -EINVAL;
+	at91_shdwc_base = of_iomap(np, 0);
+	if (!at91_shdwc_base)
+		return -EINVAL;
+
+	of_node_put(np);
+
+	return 0;
+}
+#else
+static int __init of_at91_shdc_init(void)
+{
+	return -EINVAL;
+}
+#endif
+
 void __init at91_ioremap_shdwc(u32 base_addr)
 {
+	if (!of_at91_shdc_init())
+		goto exit;
+
 	at91_shdwc_base = ioremap(base_addr, 16);
 	if (!at91_shdwc_base)
 		panic("Impossible to ioremap at91_shdwc_base\n");
+
+exit:
 	pm_power_off = at91sam9_poweroff;
 }
 

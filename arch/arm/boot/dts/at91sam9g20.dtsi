@@ -87,6 +87,11 @@
 				gpio-controller;
 			};
 
+			shdc: shutdown-controller@fffffd10 {
+				compatible = "atmel,at91sam9260-shdc";
+				reg = <0xfffffd10 0xf>;
+			};
+
 			dbgu: serial@fffff200 {
 				compatible = "atmel,at91sam9260-usart";
 				reg = <0xfffff200 0x200>;
