@@ -296,6 +296,7 @@ static void __init at91sam9263_map_io(void)
 {
 	at91_init_sram(0, AT91SAM9263_SRAM0_BASE, AT91SAM9263_SRAM0_SIZE);
 	at91_init_sram(1, AT91SAM9263_SRAM1_BASE, AT91SAM9263_SRAM1_SIZE);
+	at91_init_gpbr(AT91SAM9263_BASE_GPBR, 80);
 }
 
 static void __init at91sam9263_ioremap_registers(void)

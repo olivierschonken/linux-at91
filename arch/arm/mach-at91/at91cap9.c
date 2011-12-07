@@ -326,6 +326,10 @@ static void at91cap9_reset(void)
 static void __init at91cap9_map_io(void)
 {
 	at91_init_sram(0, AT91CAP9_SRAM_BASE, AT91CAP9_SRAM_SIZE);
+	if (cpu_is_at91cap9_revB())
+		at91_init_gpbr(AT91CAP9_BASE_GPBR_B, 16);
+	else
+		at91_init_gpbr(AT91CAP9_BASE_GPBR_A, 16);
 }
 
 static void __init at91cap9_ioremap_registers(void)

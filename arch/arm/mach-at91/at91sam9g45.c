@@ -330,6 +330,7 @@ static void at91sam9g45_reset(void)
 static void __init at91sam9g45_map_io(void)
 {
 	at91_init_sram(0, AT91SAM9G45_SRAM_BASE, AT91SAM9G45_SRAM_SIZE);
+	at91_init_gpbr(AT91SAM9G45_BASE_GPBR, 80);
 	init_consistent_dma_size(SZ_4M);
 }
 
