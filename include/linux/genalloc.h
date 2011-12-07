@@ -33,9 +33,12 @@
  *  General purpose special memory pool descriptor.
  */
 struct gen_pool {
+	char *name;			/* pool name */
 	spinlock_t lock;
 	struct list_head chunks;	/* list of chunks in this pool */
 	int min_alloc_order;		/* minimum allocation order */
+
+	struct list_head list;
 };
 
 /*
@@ -50,7 +53,21 @@ struct gen_pool_chunk {
 	unsigned long bits[0];		/* bitmap for allocating memory chunk */
 };
 
-extern struct gen_pool *gen_pool_create(int, int);
+extern struct gen_pool *gen_pool_create_byname(char*, int, int);
+
+/**
+ * gen_pool_create - create a new special memory pool
+ * @min_alloc_order: log base 2 of number of bytes each bitmap bit represents
+ * @nid: node id of the node the pool structure should be allocated on, or -1
+ *
+ * Create a new special memory pool that can be used to manage special purpose
+ * memory not managed by the regular kmalloc/kfree interface.
+ */
+static inline struct gen_pool *gen_pool_create(int min_alloc_order, int nid)
+{
+	return gen_pool_create_byname(NULL, min_alloc_order, nid);
+}
+extern struct gen_pool* gen_pool_byname(char *name);
 extern phys_addr_t gen_pool_virt_to_phys(struct gen_pool *pool, unsigned long);
 extern int gen_pool_add_virt(struct gen_pool *, unsigned long, phys_addr_t,
 			     size_t, int);

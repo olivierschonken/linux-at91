@@ -35,6 +35,8 @@
 #include <linux/interrupt.h>
 #include <linux/genalloc.h>
 
+static LIST_HEAD(pools);
+
 static int set_bits_ll(unsigned long *addr, unsigned long mask_to_set)
 {
 	unsigned long val, nval;
@@ -136,16 +138,41 @@ static int bitmap_clear_ll(unsigned long *map, int start, int nr)
 }
 
 /**
+ * gen_pool_byname - get pool by name
+ * @name: pool name
+ *
+ */
+struct gen_pool* gen_pool_byname(char *name)
+{
+	struct gen_pool *pool;
+
+	if (!name)
+		return NULL;
+
+	list_for_each_entry(pool, &pools, list) {
+		if(pool->name && strcmp(pool->name, name) == 0)
+			return pool;
+	}
+
+	return NULL;
+}
+EXPORT_SYMBOL(gen_pool_byname);
+
+/**
  * gen_pool_create - create a new special memory pool
+ * @name: pool name if NULL you will not be able to get it via gen_pool_byname
  * @min_alloc_order: log base 2 of number of bytes each bitmap bit represents
  * @nid: node id of the node the pool structure should be allocated on, or -1
  *
  * Create a new special memory pool that can be used to manage special purpose
  * memory not managed by the regular kmalloc/kfree interface.
  */
-struct gen_pool *gen_pool_create(int min_alloc_order, int nid)
+struct gen_pool *gen_pool_create_byname(char *name, int min_alloc_order, int nid)
 {
 	struct gen_pool *pool;
+
+	if (gen_pool_byname(name))
+		return NULL;
 
 	pool = kmalloc_node(sizeof(struct gen_pool), GFP_KERNEL, nid);
 	if (pool != NULL) {
@@ -153,6 +180,8 @@ struct gen_pool *gen_pool_create(int min_alloc_order, int nid)
 		INIT_LIST_HEAD(&pool->chunks);
 		pool->min_alloc_order = min_alloc_order;
 	}
+
+	list_add_tail(&pool->list, &pools);
 	return pool;
 }
 EXPORT_SYMBOL(gen_pool_create);
@@ -244,6 +273,7 @@ void gen_pool_destroy(struct gen_pool *pool)
 
 		kfree(chunk);
 	}
+	list_del(&pool->list);
 	kfree(pool);
 	return;
 }
