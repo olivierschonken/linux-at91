@@ -1247,6 +1247,11 @@ void __init at91_add_device_serial(void) {}
  */
 static int __init at91_add_standard_devices(void)
 {
+	if (cpu_is_at91cap9_revB())
+		at91_init_gpbr(AT91CAP9_BASE_GPBR_B, 16);
+	else
+		at91_init_gpbr(AT91CAP9_BASE_GPBR_A, 16);
+
 	at91_add_device_rtt();
 	at91_add_device_watchdog();
 	at91_add_device_tc();

@@ -1328,6 +1328,7 @@ void __init at91_add_device_cf(struct at91_cf_data * data) {}
  */
 static int __init at91_add_standard_devices(void)
 {
+	at91_init_gpbr(AT91SAM9260_BASE_GPBR, 16);
 	at91_add_device_rtt();
 	at91_add_device_watchdog();
 	at91_add_device_tc();

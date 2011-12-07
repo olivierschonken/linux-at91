@@ -19,6 +19,7 @@
 #include <linux/interrupt.h>
 #include <linux/ioctl.h>
 #include <linux/slab.h>
+#include <linux/genalloc.h>
 
 #include <mach/board.h>
 #include <mach/at91_rtt.h>
@@ -57,6 +58,7 @@ struct sam9_rtc {
 	void __iomem		*rtt;
 	struct rtc_device	*rtcdev;
 	u32			imr;
+	void __iomem		*gpbr;
 };
 
 #define rtt_readl(rtc, field) \
@@ -65,9 +67,9 @@ struct sam9_rtc {
 	__raw_writel((val), (rtc)->rtt + AT91_RTT_ ## field)
 
 #define gpbr_readl(rtc) \
-	at91_sys_read(AT91_GPBR + 4 * CONFIG_RTC_DRV_AT91SAM9_GPBR)
+	__raw_readl((rtc)->gpbr)
 #define gpbr_writel(rtc, val) \
-	at91_sys_write(AT91_GPBR + 4 * CONFIG_RTC_DRV_AT91SAM9_GPBR, (val))
+	__raw_writel((val), (rtc)->gpbr)
 
 /*
  * Read current time and date in RTC
@@ -302,6 +304,13 @@ static int __init at91_rtc_probe(struct platform_device *pdev)
 	if (!rtc)
 		return -ENOMEM;
 
+	rtc->gpbr = (void __iomem*)gen_pool_alloc_byname("gpbr", 4);
+	if (!rtc->gpbr) {
+		dev_err(&pdev->dev, "failed to alloc gpbr, aborting.\n");
+		ret = -ENOMEM;
+		goto fail;
+	}
+
 	/* platform setup code should have handled this; sigh */
 	if (!device_can_wakeup(&pdev->dev))
 		device_init_wakeup(&pdev->dev, 1);
@@ -311,7 +320,7 @@ static int __init at91_rtc_probe(struct platform_device *pdev)
 	if (!rtc->rtt) {
 		dev_err(&pdev->dev, "failed to map registers, aborting.\n");
 		ret = -ENOMEM;
-		goto fail;
+		goto fail_ioremap;
 	}
 
 	mr = rtt_readl(rtc, MR);
@@ -357,6 +366,8 @@ static int __init at91_rtc_probe(struct platform_device *pdev)
 
 fail_register:
 	iounmap(rtc->rtt);
+fail_ioremap:
+	gen_pool_free_byname("gpbr", (unsigned long)rtc->gpbr, 4);
 fail:
 	platform_set_drvdata(pdev, NULL);
 	kfree(rtc);
@@ -378,6 +389,7 @@ static int __exit at91_rtc_remove(struct platform_device *pdev)
 	rtc_device_unregister(rtc->rtcdev);
 
 	iounmap(rtc->rtt);
+	gen_pool_free_byname("gpbr", (unsigned long)rtc->gpbr, 4);
 	platform_set_drvdata(pdev, NULL);
 	kfree(rtc);
 	return 0;

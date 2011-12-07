@@ -1049,6 +1049,7 @@ void __init at91_add_device_serial(void) {}
  */
 static int __init at91_add_standard_devices(void)
 {
+	at91_init_gpbr(AT91SAM9261_BASE_GPBR, 16);
 	at91_add_device_rtt();
 	at91_add_device_watchdog();
 	at91_add_device_tc();

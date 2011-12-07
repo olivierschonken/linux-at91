@@ -11,6 +11,7 @@
 #include <linux/pm.h>
 #include <linux/of.h>
 #include <linux/of_address.h>
+#include <linux/genalloc.h>
 
 #include <asm/mach/map.h>
 
@@ -51,6 +52,34 @@ void __init at91_init_interrupts(unsigned int *priority)
 
 	/* Enable GPIO interrupts */
 	at91_gpio_irq_setup();
+}
+
+void __init at91_init_gpbr(unsigned long base, unsigned int length)
+{
+	struct gen_pool *pool;
+	void __iomem *virt;
+
+	pool = gen_pool_create_byname("gpbr", 2, -1);
+
+	if (!pool)
+		goto err_create;
+
+	virt = ioremap(base, length);
+	if (!virt)
+		goto err_ioremap;
+	if (gen_pool_add_virt(pool, (unsigned long)virt, base, length, -1))
+		goto fail_add_virt;
+
+	pr_info("AT91: create GPBR pool of 0x%x at 0x%lx (mapped at 0x%p)\n",
+		length, base, virt);
+	return;
+
+fail_add_virt:
+	iounmap(virt);
+err_ioremap:
+	gen_pool_destroy(pool);
+err_create:
+	pr_err("gpbr: genalloc pool failed to create\n");
 }
 
 static struct map_desc sram_desc[2] __initdata;

@@ -1619,6 +1619,7 @@ void __init at91_add_device_serial(void) {}
  */
 static int __init at91_add_standard_devices(void)
 {
+	at91_init_gpbr(AT91SAM9G45_BASE_GPBR, 80);
 	at91_add_device_hdmac();
 	at91_add_device_rtc();
 	at91_add_device_rtt();
