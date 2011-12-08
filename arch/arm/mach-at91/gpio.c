@@ -11,6 +11,7 @@
 
 #include <linux/clk.h>
 #include <linux/errno.h>
+#include <linux/device.h>
 #include <linux/gpio.h>
 #include <linux/interrupt.h>
 #include <linux/irq.h>
@@ -46,6 +47,7 @@ static int at91_gpiolib_direction_output(struct gpio_chip *chip,
 					 unsigned offset, int val);
 static int at91_gpiolib_direction_input(struct gpio_chip *chip,
 					unsigned offset);
+static int at91_gpiolib_to_irq(struct gpio_chip *chip, unsigned offset);
 
 #define AT91_GPIO_CHIP(name, base_gpio, nr_gpio)			\
 	{								\
@@ -57,6 +59,7 @@ static int at91_gpiolib_direction_input(struct gpio_chip *chip,
 			.set		  = at91_gpiolib_set,		\
 			.dbg_show	  = at91_gpiolib_dbg_show,	\
 			.base		  = base_gpio,			\
+			.to_irq		  = at91_gpiolib_to_irq,	\
 			.ngpio		  = nr_gpio,			\
 		},							\
 	}
@@ -85,6 +88,16 @@ static inline unsigned pin_to_mask(unsigned pin)
 	return 1 << (pin % 32);
 }
 
+
+/*
+ * As gpio IRQs are stacked without holes, we can determine
+ * the gpio form an irq number comparing it with the first IRQ of first
+ * GPIO/IRQ domain.
+ */
+static inline unsigned irq_to_gpio(unsigned irq)
+{
+	return irq - irq_domain_to_irq(&gpio_chip[0].domain, 0);
+}
 
 /*--------------------------------------------------------------------------*/
 
@@ -626,6 +639,16 @@ static void at91_gpiolib_dbg_show(struct seq_file *s, struct gpio_chip *chip)
 					   mask ? "B" : "A");
 		}
 	}
+}
+
+static int at91_gpiolib_to_irq(struct gpio_chip *chip, unsigned offset)
+{
+	struct at91_gpio_chip *at91_gpio = to_at91_gpio_chip(chip);
+	int retirq = irq_domain_to_irq(&at91_gpio->domain, offset);
+
+	dev_dbg(chip->dev, "request IRQ for GPIO %d, return %d\n", offset,
+		retirq);
+	return retirq;
 }
 
 static int __init at91_gpio_setup_clk(int i)
