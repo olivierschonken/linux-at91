@@ -178,6 +178,7 @@ static struct atmel_nand_data __initdata cap9adk_nand_data = {
 	.det_pin	= -EINVAL,
 	.rdy_pin	= -EINVAL,
 	.enable_pin	= AT91_PIN_PD15,
+	.ecc_mode	= NAND_ECC_SOFT,
 	.parts		= cap9adk_nand_partitions,
 	.num_parts	= ARRAY_SIZE(cap9adk_nand_partitions),
 };
