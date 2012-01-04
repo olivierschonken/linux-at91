@@ -37,4 +37,10 @@
 			};
 		};
 	};
+
+	drv {
+		compatible = "atmel,drv";
+		gpios = <&pioB 7 0>;
+	};
+
 };
