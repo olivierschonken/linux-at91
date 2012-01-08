@@ -102,6 +102,39 @@ void __init at91_init_sram(int bank, unsigned long base, unsigned int length)
 	iotable_init(desc, 1);
 }
 
+static void __init at91_init_sram_pool(void)
+{
+	int i;
+	struct map_desc *desc;
+	struct gen_pool *pool;
+
+	pool = gen_pool_create_byname("sram", 2, -1);
+
+	if (!pool)
+		goto err_create;
+
+	for (i = 0; i < ARRAY_SIZE(sram_desc); i++) {
+		desc = &sram_desc[i];
+
+		if (!desc->virtual)
+			continue;
+
+		if (gen_pool_add_virt(pool, desc->virtual,
+			__pfn_to_phys(desc->pfn), desc->length, -1))
+			goto fail_add_virt;
+
+		pr_info("AT91: create SRAM pool of 0x%lx at 0x%x (mapped at 0x%lx)\n",
+			desc->length, __pfn_to_phys(desc->pfn), desc->virtual);
+	}
+
+	return;
+
+fail_add_virt:
+	gen_pool_destroy(pool);
+err_create:
+	pr_err("sram: genalloc pool failed to create\n");
+}
+
 static struct map_desc at91_io_desc __initdata = {
 	.virtual	= AT91_VA_BASE_SYS,
 	.pfn		= __phys_to_pfn(AT91_BASE_SYS),
@@ -377,3 +410,11 @@ void __init at91_initialize(unsigned long main_clock)
 
 	at91_boot_soc.init();
 }
+
+static int __init at91_arch_init(void)
+{
+	at91_init_sram_pool();
+
+	return 0;
+}
+arch_initcall(at91_arch_init);

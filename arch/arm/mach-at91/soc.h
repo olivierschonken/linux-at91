@@ -10,6 +10,7 @@ struct at91_init_soc {
 	void (*ioremap_registers)(void);
 	void (*register_clocks)(void);
 	void (*init)(void);
+	void (*arch_init)(void);
 };
 
 extern struct at91_init_soc at91_boot_soc;
