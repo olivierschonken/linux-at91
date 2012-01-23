@@ -332,6 +332,7 @@ static void __init at91sam9260_ioremap_registers(void)
 	at91_ioremap_shdwc(AT91SAM9260_BASE_SHDWC);
 	if (of_at91sam926x_pit_init() < 0)
 		at91sam926x_ioremap_pit(AT91SAM9260_BASE_PIT);
+	at91_ioremap_rstc(AT91SAM9260_BASE_RSTC);
 	at91sam9_ioremap_smc(0, AT91SAM9260_BASE_SMC);
 }
 
