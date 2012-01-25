@@ -41,7 +41,7 @@
 #include <sound/atmel-ac97c.h>
 #include <linux/serial.h>
 #include <linux/platform_data/macb.h>
-#include <linux/platform_data/atmel_nand.h>
+#include <linux/platform_data/atmel.h>
 
  /* USB Device */
 struct at91_udc_data {

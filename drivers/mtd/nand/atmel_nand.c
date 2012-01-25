@@ -34,7 +34,7 @@
 #include <linux/dmaengine.h>
 #include <linux/gpio.h>
 #include <linux/io.h>
-#include <linux/atmel_nand.h>
+#include <linux/platform_data/atmel.h>
 
 #include <mach/cpu.h>
 

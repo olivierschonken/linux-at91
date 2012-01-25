@@ -1,5 +1,5 @@
 /*
- * atmel_nand platform data
+ * atmel platform data
  *
  * GPL v2 Only
  */
