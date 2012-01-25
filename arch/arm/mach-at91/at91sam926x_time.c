@@ -162,38 +162,56 @@ static struct of_device_id timer_ids[] = {
 int __init of_at91sam926x_pit_init(void)
 {
 	struct device_node	*np;
-	int			ret;
 
 	np = of_find_matching_node(NULL, timer_ids);
-	if (!np)
+	if (!np) {
+		pr_crit("unable to find PIT DT entry\n");
 		goto err;
+	}
 
 	pit_base_addr = of_iomap(np, 0);
 	if (!pit_base_addr)
 		goto node_err;
 
-	/* Get the interrupts property */
-	ret = irq_of_parse_and_map(np, 0);
-	if (!ret)
-		goto ioremap_err;
-	at91sam926x_pit_irq.irq = ret;
-
 	of_node_put(np);
 
 	return 0;
 
-ioremap_err:
-	iounmap(pit_base_addr);
 node_err:
 	of_node_put(np);
 err:
 	return -EINVAL;
+}
+
+static void __init of_at91sam926x_pit_irq(void)
+{
+	struct device_node	*np;
+	int			ret;
+
+	np = of_find_matching_node(NULL, timer_ids);
+	if (!np)
+		goto irq_err;
+
+	/* Get the interrupts property */
+	ret = irq_of_parse_and_map(np, 0);
+	if (!ret) {
+		pr_crit("unable to map PIT irq\n");
+		goto irq_node_err;
+	}
+	at91sam926x_pit_irq.irq = ret;
+
+irq_node_err:
+	of_node_put(np);
+irq_err:
+	return;
 }
 #else
 int __init of_at91sam926x_pit_init(void)
 {
 	return -EINVAL;
 }
+
+static void __init of_at91sam926x_pit_irq(void) {}
 #endif
 
 /*
@@ -203,6 +221,9 @@ static void __init at91sam926x_pit_init(void)
 {
 	unsigned long	pit_rate;
 	unsigned	bits;
+
+	/* If DT available, use irq specification from it */
+	of_at91sam926x_pit_irq();
 
 	/*
 	 * Use our actual MCK to figure out how many MCK/16 ticks per

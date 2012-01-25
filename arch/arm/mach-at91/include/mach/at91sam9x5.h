@@ -50,26 +50,23 @@
 /*
  * User Peripheral physical base addresses.
  */
-#define AT91SAM9X5_BASE_USART0		0xf801c000
-#define AT91SAM9X5_BASE_USART1		0xf8020000
-#define AT91SAM9X5_BASE_USART2		0xf8024000
-#define AT91SAM9X5_BASE_USART3		0xf8028000
-#define AT91SAM9X5_BASE_UART0		0xf8040000
-#define AT91SAM9X5_BASE_UART1		0xf8044000
+#define AT91SAM9X5_BASE_USART0	0xf801c000
+#define AT91SAM9X5_BASE_USART1	0xf8020000
+#define AT91SAM9X5_BASE_USART2	0xf8024000
 
 /*
  * System Peripherals (offset from AT91_BASE_SYS)
  */
+#define AT91_DDRSDRC0	(0xffffe800 - AT91_BASE_SYS)
 #define AT91_PMC	(0xfffffc00 - AT91_BASE_SYS)
 
 /*
- * System Peripheral physical base addresses.
+ * Base addresses for early serial code (uncompress.h)
  */
 #define AT91_DBGU	AT91_BASE_DBGU0
 #define AT91_USART0	AT91SAM9X5_BASE_USART0
 #define AT91_USART1	AT91SAM9X5_BASE_USART1
 #define AT91_USART2	AT91SAM9X5_BASE_USART2
-#define AT91_USART3	AT91SAM9X5_BASE_USART3
 
 /*
  * Internal Memory.

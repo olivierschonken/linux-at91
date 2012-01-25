@@ -44,6 +44,7 @@ static void __init ek_init_early(void)
 	at91_set_serial_console(0);
 }
 
+#if 0
 /* det_pin is not connected */
 static struct atmel_nand_data __initdata ek_nand_data = {
 	.ale		= 21,
@@ -85,18 +86,22 @@ static void __init ek_add_device_nand(void)
 
 	at91_add_device_nand(&ek_nand_data);
 }
+#endif
 
 static void __init at91_dt_device_init(void)
 {
 	of_platform_populate(NULL, of_default_bus_match_table, NULL, NULL);
 
+#if 0
 	/* NAND */
 	ek_add_device_nand();
+#endif
 }
 
 static const char *at91_dt_board_compat[] __initdata = {
 	"atmel,at91sam9m10g45ek",
 	"calao,usb-a9g20",
+	"atmel,at91sam9x5ek",
 	NULL
 };
 

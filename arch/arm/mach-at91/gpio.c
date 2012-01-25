@@ -780,6 +780,10 @@ void __init at91_gpio_init(struct at91_gpio_bank *data, int nr_banks)
 
 	if (of_at91_gpio_init() < 0) {
 		/* No GPIO controller found in device tree */
+		if (nr_banks <= 0 || data == NULL) {
+			pr_err("Unable to find a GPIO controller.\n");
+			return;
+		}
 		for (i = 0; i < nr_banks; i++)
 			at91_gpio_init_one(i, data[i].regbase, data[i].id);
 	}

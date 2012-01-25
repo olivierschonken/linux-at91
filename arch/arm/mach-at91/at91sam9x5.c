@@ -15,6 +15,7 @@
 #include <mach/at91sam9x5.h>
 #include <mach/at91_pmc.h>
 #include <mach/cpu.h>
+#include <mach/board.h>
 
 #include "soc.h"
 #include "generic.h"
@@ -141,7 +142,7 @@ static struct clk udphs_clk = {
 };
 /* emac0 clock - Only for sam9g25/sam9x25/sam9g35/sam9x35 */
 static struct clk macb0_clk = {
-	.name		= "macb0_clk",
+	.name		= "pclk",
 	.pmc_mask	= 1 << AT91SAM9X5_ID_EMAC0,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
@@ -164,7 +165,7 @@ static struct clk mmc1_clk = {
 };
 /* emac1 clock - Only for sam9x25 */
 static struct clk macb1_clk = {
-	.name		= "macb1_clk",
+	.name		= "pclk",
 	.pmc_mask	= 1 << AT91SAM9X5_ID_EMAC1,
 	.type		= CLK_TYPE_PERIPHERAL,
 };
@@ -220,14 +221,15 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("usart", "f8020000.serial", &usart1_clk),
 	CLKDEV_CON_DEV_ID("usart", "f8024000.serial", &usart2_clk),
 	CLKDEV_CON_DEV_ID("usart", "f8028000.serial", &usart3_clk),
-};
-
-static struct clk_lookup usart_clocks_lookups[] = {
-	CLKDEV_CON_DEV_ID("usart", "atmel_usart.0", &mck),
-	CLKDEV_CON_DEV_ID("usart", "atmel_usart.1", &usart0_clk),
-	CLKDEV_CON_DEV_ID("usart", "atmel_usart.2", &usart1_clk),
-	CLKDEV_CON_DEV_ID("usart", "atmel_usart.3", &usart2_clk),
-	CLKDEV_CON_DEV_ID("usart", "atmel_usart.4", &usart3_clk),
+	CLKDEV_CON_DEV_ID("t0_clk", "f8008000.timer", &tcb0_clk),
+	CLKDEV_CON_DEV_ID("t0_clk", "f800c000.timer", &tcb0_clk),
+	CLKDEV_CON_ID("pioA", &pioAB_clk),
+	CLKDEV_CON_ID("pioB", &pioAB_clk),
+	CLKDEV_CON_ID("pioC", &pioCD_clk),
+	CLKDEV_CON_ID("pioD", &pioCD_clk),
+	/* additional fake clock for macb_hclk */
+	CLKDEV_CON_DEV_ID("hclk", "f802c000.ethernet", &macb0_clk),
+	CLKDEV_CON_DEV_ID("hclk", "f8030000.ethernet", &macb1_clk),
 };
 
 /*
@@ -256,8 +258,6 @@ static void __init at91sam9x5_register_clocks(void)
 
 	clkdev_add_table(periph_clocks_lookups,
 			 ARRAY_SIZE(periph_clocks_lookups));
-	clkdev_add_table(usart_clocks_lookups,
-			 ARRAY_SIZE(usart_clocks_lookups));
 
 	if (cpu_is_at91sam9g25()
 	|| cpu_is_at91sam9x25())
@@ -289,38 +289,6 @@ static void __init at91sam9x5_register_clocks(void)
 	clk_register(&pck1);
 }
 
-static struct clk_lookup console_clock_lookup;
-
-void __init at91sam9x5_set_console_clock(int id)
-{
-	if (id >= ARRAY_SIZE(usart_clocks_lookups))
-		return;
-
-	console_clock_lookup.con_id = "usart";
-	console_clock_lookup.clk = usart_clocks_lookups[id].clk;
-	clkdev_add(&console_clock_lookup);
-}
-
-/* --------------------------------------------------------------------
- *  GPIO
- * -------------------------------------------------------------------- */
-
-static struct at91_gpio_bank at91sam9x5_gpio[] = {
-	{
-		.id		= AT91SAM9X5_ID_PIOAB,
-		.regbase	= AT91SAM9X5_BASE_PIOA,
-	}, {
-		.id		= AT91SAM9X5_ID_PIOAB,
-		.regbase	= AT91SAM9X5_BASE_PIOB,
-	}, {
-		.id		= AT91SAM9X5_ID_PIOCD,
-		.regbase	= AT91SAM9X5_BASE_PIOC,
-	}, {
-		.id		= AT91SAM9X5_ID_PIOCD,
-		.regbase	= AT91SAM9X5_BASE_PIOD,
-	}
-};
-
 /* --------------------------------------------------------------------
  *  AT91SAM9x5 processor initialization
  * -------------------------------------------------------------------- */
@@ -333,16 +301,69 @@ static void __init at91sam9x5_map_io(void)
 
 static void __init at91sam9x5_ioremap_registers(void)
 {
+	if (of_at91sam926x_pit_init() < 0)
+		panic("Impossible to find PIT\n");
 }
 
-void __init at91sam9x5_initialize(unsigned long main_clock)
+void __init at91sam9x5_initialize(void)
 {
 	arm_pm_restart = at91sam9g45_restart;
 	at91_extern_irq = (1 << AT91SAM9X5_ID_IRQ0);
 
-	/* Register GPIO subsystem */
-	at91_gpio_init(at91sam9x5_gpio, 4);
+	/* Register GPIO subsystem (using DT) */
+	at91_gpio_init(NULL, 0);
 }
+
+/* --------------------------------------------------------------------
+ *  AT91SAM9x5 console initialization
+ * -------------------------------------------------------------------- */
+#if 0
+#if defined(CONFIG_SERIAL_ATMEL)
+static struct atmel_uart_data dbgu_data;
+static u64 dbgu_dmamask = DMA_BIT_MASK(32);
+
+static struct resource dbgu_resources[] = {
+        [0] = {
+                .start  = AT91_DBGU,
+                .end    = AT91_DBGU + SZ_512 - 1,
+                .flags  = IORESOURCE_MEM,
+        },
+        [1] = {
+                .start  = AT91_ID_SYS,
+                .end    = AT91_ID_SYS,
+                .flags  = IORESOURCE_IRQ,
+        },
+};
+
+static struct platform_device at91sam9x5_dbgu_device = {
+	.name		= "atmel_usart",
+	.id		= 0,
+	.dev		= {
+				.dma_mask		= &dbgu_dmamask,
+				.coherent_dma_mask	= DMA_BIT_MASK(32),
+				.platform_data		= &dbgu_data,
+	},
+        .resource       = dbgu_resources,
+        .num_resources  = ARRAY_SIZE(dbgu_resources),
+};
+
+struct platform_device *atmel_default_console_device;	/* the serial console device */
+
+void __init at91_register_uart(unsigned id, unsigned portnr, unsigned pins) {}
+
+void __init at91_set_serial_console(unsigned portnr)
+{
+	atmel_default_console_device = &at91sam9x5_dbgu_device;
+}
+#else
+void __init at91_register_uart(unsigned id, unsigned portnr, unsigned pins) {}
+void __init at91_set_serial_console(unsigned portnr) {}
+#endif
+#else
+void __init at91_register_uart(unsigned id, unsigned portnr, unsigned pins) {}
+void __init at91_set_serial_console(unsigned portnr) {}
+struct platform_device *atmel_default_console_device = NULL;
+#endif
 
 /* --------------------------------------------------------------------
  *  Interrupt initialization
