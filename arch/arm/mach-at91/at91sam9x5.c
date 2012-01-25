@@ -302,7 +302,6 @@ static void __init at91sam9x5_map_io(void)
 static void __init at91sam9x5_ioremap_registers(void)
 {
 	at91_ioremap_ramc(0, AT91SAM9X5_BASE_DDRSDRC0, 512);
-	at91sam9_ioremap_smc(0, 0xffffea00);
 }
 
 void __init at91sam9x5_initialize(void)
@@ -313,11 +312,6 @@ void __init at91sam9x5_initialize(void)
 	/* Register GPIO subsystem (using DT) */
 	at91_gpio_init(NULL, 0);
 }
-
-/* --------------------------------------------------------------------
- *  AT91SAM9x5 devices (temporary before modification of code)
- * -------------------------------------------------------------------- */
-void __init at91_add_device_nand(struct atmel_nand_data *data) {}
 
 /* --------------------------------------------------------------------
  *  Interrupt initialization
