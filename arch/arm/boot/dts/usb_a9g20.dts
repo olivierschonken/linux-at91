@@ -120,6 +120,11 @@
 				};
 			};
 
+			usb1: gadget@fffa4000 {
+				atmel,vbus-gpio = <&pioC 5 0>;
+				status = "okay";
+			};
+
 		};
 	};
 };

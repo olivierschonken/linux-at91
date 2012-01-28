@@ -199,6 +199,13 @@
 				status = "disabled";
 			};
 
+			usb1: gadget@fffa4000 {
+				compatible = "atmel,at91rm9200-udc";
+				reg = <0xfffa4000 0x4000>;
+				interrupts = <10 4>;
+				status = "disabled";
+			};
+
 		};
 	};
 };
