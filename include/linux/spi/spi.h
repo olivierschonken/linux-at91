@@ -89,6 +89,7 @@ struct spi_device {
 	void			*controller_state;
 	void			*controller_data;
 	char			modalias[SPI_NAME_SIZE];
+	int			cs_gpio;	/* chip select gpio */
 
 	/*
 	 * likely need more hooks for more protocol options affecting how
@@ -318,6 +319,9 @@ struct spi_master {
 
 	/* called on release() to free memory provided by spi_master */
 	void			(*cleanup)(struct spi_device *spi);
+
+	/* gpio chip select */
+	int			*cs_gpios;
 };
 
 static inline void *spi_master_get_devdata(struct spi_master *master)
