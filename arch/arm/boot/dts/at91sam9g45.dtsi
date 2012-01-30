@@ -266,6 +266,24 @@
 					atmel,can-isoc;
 				};
 			};
+
+			spi0: spi@fffa4000 {
+				#address-cells = <1>;
+				#size-cells = <0>;
+				compatible = "atmel,at91rm9200-spi";
+				reg = <0xfffa4000 0x4000>;
+				interrupts = <14 4>;
+				status = "disabled";
+			};
+
+			spi1: spi@fffa8000 {
+				#address-cells = <1>;
+				#size-cells = <0>;
+				compatible = "atmel,at91rm9200-spi";
+				reg = <0xfffa8000 0x4000>;
+				interrupts = <15 4>;
+				status = "disabled";
+			};
 		};
 
 		nand0: nand@40000000 {
