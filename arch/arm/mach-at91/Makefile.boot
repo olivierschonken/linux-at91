@@ -13,4 +13,5 @@ params_phys-y	:= 0x20000100
 initrd_phys-y	:= 0x20410000
 endif
 
-dtb-$(CONFIG_MACH_AT91SAM_DT) += at91sam9m10g45ek.dtb usb_a9g20.dtb
+dtb-$(CONFIG_MACH_AT91SAM_DT) += at91sam9m10g45ek.dtb
+dtb-$(CONFIG_MACH_AT91SAM_DT) += usb_a9g20.dtb tny_a9g20.dtb
