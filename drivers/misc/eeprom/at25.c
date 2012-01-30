@@ -19,6 +19,7 @@
 
 #include <linux/spi/spi.h>
 #include <linux/spi/eeprom.h>
+#include <linux/of.h>
 
 
 /*
@@ -288,21 +289,58 @@ static ssize_t at25_mem_write(struct memory_accessor *mem, const char *buf,
 }
 
 /*-------------------------------------------------------------------------*/
+static void of_at25_probe(struct spi_eeprom *chip, struct spi_device *spi)
+{
+	struct spi_master *master = spi->master;
+	struct device_node *np = master->dev.of_node;
+	u32 val;
+
+	if (!of_property_read_u32(np, "addr", &val)) {
+		switch (val) {
+		case 8:
+			chip->flags = EE_ADDR1;
+			break;
+		case 16:
+			chip->flags = EE_ADDR2;
+			break;
+		case 24:
+			chip->flags = EE_ADDR3;
+			break;
+		}
+	}
+
+	if (!of_property_read_u32(np, "size", &val))
+		chip->byte_len = val;
+
+	if (!of_property_read_u32(np, "pagesize", &val))
+		chip->page_size = val;
+}
 
 static int at25_probe(struct spi_device *spi)
 {
 	struct at25_data	*at25 = NULL;
-	const struct spi_eeprom *chip;
+	struct spi_eeprom	*chip;
 	int			err;
 	int			sr;
 	int			addrlen;
 
-	/* Chip description */
-	chip = spi->dev.platform_data;
-	if (!chip) {
-		dev_dbg(&spi->dev, "no chip description\n");
-		err = -ENODEV;
+	if (!(at25 = kzalloc(sizeof *at25, GFP_KERNEL))) {
+		err = -ENOMEM;
 		goto fail;
+	}
+
+	if (spi->master->dev.of_node) {
+		chip = &at25->chip;
+		of_at25_probe(chip, spi);
+	} else {
+		/* Chip description */
+		chip = spi->dev.platform_data;
+		if (!chip) {
+			dev_dbg(&spi->dev, "no chip description\n");
+			err = -ENODEV;
+			goto fail;
+		}
+		at25->chip = *chip;
 	}
 
 	/* For now we only support 8/16/24 bit addressing */
@@ -329,13 +367,7 @@ static int at25_probe(struct spi_device *spi)
 		goto fail;
 	}
 
-	if (!(at25 = kzalloc(sizeof *at25, GFP_KERNEL))) {
-		err = -ENOMEM;
-		goto fail;
-	}
-
 	mutex_init(&at25->lock);
-	at25->chip = *chip;
 	at25->spi = spi_dev_get(spi);
 	dev_set_drvdata(&spi->dev, at25);
 	at25->addrlen = addrlen;
@@ -396,10 +428,16 @@ static int __devexit at25_remove(struct spi_device *spi)
 
 /*-------------------------------------------------------------------------*/
 
+static struct of_device_id at25_of_match_table[] __devinitdata = {
+	{ .compatible = "at25", },
+	{},
+};
+
 static struct spi_driver at25_driver = {
 	.driver = {
 		.name		= "at25",
 		.owner		= THIS_MODULE,
+		.of_match_table = at25_of_match_table,
 	},
 	.probe		= at25_probe,
 	.remove		= __devexit_p(at25_remove),
