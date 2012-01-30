@@ -51,6 +51,29 @@
 				atmel,vbus-gpio = <&pioB 19 0>;
 				status = "okay";
 			};
+
+			spi0: spi@fffa4000 {
+				cs-gpios = <&pioB 3 0>;
+				status = "okay";
+				flash: at45db321d@0 {
+					compatible = "atmel,at45db321d", "atmel,at45", "atmel,dataflash";
+					reg = <0>;
+					spi-max-frequency = <15000000>;
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					partition@0 {
+						label = "U-Boot";
+						reg = <0x0 0x40110>;
+						read-only;
+					};
+
+					partition@40110 {
+						label = "Kernel";
+						reg = <0x40110 0x3dfef0>;
+					};
+				};
+			};
 		};
 
 		nand0: nand@40000000 {
