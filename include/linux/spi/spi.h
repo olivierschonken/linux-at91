@@ -318,6 +318,11 @@ struct spi_master {
 
 	/* called on release() to free memory provided by spi_master */
 	void			(*cleanup)(struct spi_device *spi);
+
+	/* gpio chip select */
+	int			*chipselect_gpios;
+	int			first_gpio_chipselect;
+	int			num_gpio_chipselect;
 };
 
 static inline void *spi_master_get_devdata(struct spi_master *master)

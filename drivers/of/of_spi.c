@@ -12,6 +12,7 @@
 #include <linux/spi/spi.h>
 #include <linux/of_irq.h>
 #include <linux/of_spi.h>
+#include <linux/of_gpio.h>
 
 /**
  * of_register_spi_devices - Register child devices onto the SPI bus
@@ -27,6 +28,7 @@ void of_register_spi_devices(struct spi_master *master)
 	const __be32 *prop;
 	int rc;
 	int len;
+	int ncs_pin;
 
 	if (!master->dev.of_node)
 		return;
@@ -50,15 +52,24 @@ void of_register_spi_devices(struct spi_master *master)
 			continue;
 		}
 
-		/* Device address */
-		prop = of_get_property(nc, "reg", &len);
-		if (!prop || len < sizeof(*prop)) {
-			dev_err(&master->dev, "%s has no 'reg' property\n",
-				nc->full_name);
-			spi_dev_put(spi);
-			continue;
+		/* ncs gpio */
+		ncs_pin = of_get_named_gpio(nc, "ncs-gpio", 0);
+
+		if (gpio_is_valid(ncs_pin)) {
+			spi->controller_data = (void *)ncs_pin;
+			spi->chip_select = master->num_chipselect;
+			master->num_chipselect++;
+		} else {
+			/* Device address */
+			prop = of_get_property(nc, "reg", &len);
+			if (!prop || len < sizeof(*prop)) {
+				dev_err(&master->dev, "%s has no 'reg' property\n",
+					nc->full_name);
+				spi_dev_put(spi);
+				continue;
+			}
+			spi->chip_select = be32_to_cpup(prop);
 		}
-		spi->chip_select = be32_to_cpup(prop);
 
 		/* Mode (clock phase/polarity/etc.) */
 		if (of_find_property(nc, "spi-cpha", NULL))

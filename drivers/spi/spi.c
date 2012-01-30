@@ -28,6 +28,7 @@
 #include <linux/mod_devicetable.h>
 #include <linux/spi/spi.h>
 #include <linux/of_spi.h>
+#include <linux/of_gpio.h>
 #include <linux/pm_runtime.h>
 #include <linux/export.h>
 
@@ -339,15 +340,16 @@ EXPORT_SYMBOL_GPL(spi_alloc_device);
 int spi_add_device(struct spi_device *spi)
 {
 	static DEFINE_MUTEX(spi_add_lock);
-	struct device *dev = spi->master->dev.parent;
+	struct spi_master *master = spi->master;
+	struct device *dev = master->dev.parent;
 	struct device *d;
 	int status;
 
 	/* Chipselects are numbered 0..max; validate. */
-	if (spi->chip_select >= spi->master->num_chipselect) {
+	if (spi->chip_select >= master->num_chipselect) {
 		dev_err(dev, "cs%d >= max %d\n",
 			spi->chip_select,
-			spi->master->num_chipselect);
+			master->num_chipselect);
 		return -EINVAL;
 	}
 
@@ -369,6 +371,13 @@ int spi_add_device(struct spi_device *spi)
 		put_device(d);
 		status = -EBUSY;
 		goto done;
+	}
+
+	if (master->num_gpio_chipselect &&
+	    spi->chip_select >= master->first_gpio_chipselect) {
+		int num = spi->chip_select = master->first_gpio_chipselect;
+
+		spi->controller_data = (void*)master->chipselect_gpios[num];
 	}
 
 	/* Drivers may modify this initial i/o setup, but will
@@ -562,6 +571,38 @@ struct spi_master *spi_alloc_master(struct device *dev, unsigned size)
 }
 EXPORT_SYMBOL_GPL(spi_alloc_master);
 
+static int of_spi_register_master(struct spi_master *master)
+{
+	int nb, i;
+	int *cs;
+	struct device_node *np = master->dev.of_node;
+
+	if (!np)
+		return 0;
+
+	nb = of_gpio_named_count(np, "ncs-gpios");
+
+	if (nb < 1)
+		return 0;
+
+	master->chipselect_gpios = kzalloc(sizeof(int) * nb, GFP_KERNEL);
+
+	if (!master->chipselect_gpios)
+		return -ENOMEM;
+
+	master->first_gpio_chipselect = master->num_chipselect;
+	master->num_chipselect += nb;
+	master->num_gpio_chipselect = nb;
+
+	for (i = 0; i < nb; i++) {
+		cs = &master->chipselect_gpios[i];
+
+		*cs = of_get_named_gpio(np, "ncs-gpios", i);
+	}
+
+	return 0;
+}
+
 /**
  * spi_register_master - register SPI master controller
  * @master: initialized master, originally from spi_alloc_master()
@@ -592,6 +633,10 @@ int spi_register_master(struct spi_master *master)
 
 	if (!dev)
 		return -ENODEV;
+
+	status = of_spi_register_master(master);
+	if (status)
+		return status;
 
 	/* even if it's just one always-selected device, there must
 	 * be at least one chipselect
