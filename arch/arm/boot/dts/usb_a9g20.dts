@@ -74,6 +74,19 @@
 
 			};
 
+			spi1: spi@fffcc000 {
+				ncs-gpios = <&pioB 3 0>;
+				status = "okay";
+				mmc-slot@0 {
+					compatible = "mmc-spi-slot";
+					reg = <0>;
+					gpios = <&pioC 4 0   /* CD */
+						>;
+					voltage-ranges = <3200 3400>;
+					spi-max-frequency = <20000000>;
+				};
+			};
+
 		};
 	};
 };
