@@ -87,6 +87,16 @@
 				};
 			};
 
+			leds {
+				compatible = "gpio-leds";
+
+				user_led {
+					label = "user_led";
+					gpios = <&pioB 21 1>;
+					linux,default-trigger = "heartbeat";
+				};
+			};
+
 		};
 	};
 };
