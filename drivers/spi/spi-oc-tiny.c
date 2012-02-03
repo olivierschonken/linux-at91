@@ -266,7 +266,6 @@ static int __devinit tiny_spi_of_probe(struct platform_device *pdev)
 		if (hw->gpio_cs[i] < 0)
 			return -ENODEV;
 	}
-	hw->bitbang.master->dev.of_node = pdev->dev.of_node;
 	val = of_get_property(pdev->dev.of_node,
 			      "clock-frequency", &len);
 	if (val && len >= sizeof(__be32))

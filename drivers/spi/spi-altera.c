@@ -270,9 +270,6 @@ static int __devinit altera_spi_probe(struct platform_device *pdev)
 		if (err)
 			goto exit;
 	}
-	/* find platform data */
-	if (!platp)
-		hw->bitbang.master->dev.of_node = pdev->dev.of_node;
 
 	/* register our spi controller */
 	err = spi_bitbang_start(&hw->bitbang);

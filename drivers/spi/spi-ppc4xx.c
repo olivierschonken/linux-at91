@@ -406,7 +406,6 @@ static int __init spi_ppc4xx_of_probe(struct platform_device *op)
 	master = spi_alloc_master(dev, sizeof *hw);
 	if (master == NULL)
 		return -ENOMEM;
-	master->dev.of_node = np;
 	dev_set_drvdata(dev, master);
 	hw = spi_master_get_devdata(master);
 	hw->master = spi_master_get(master);

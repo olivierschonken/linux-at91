@@ -547,7 +547,6 @@ static int __devinit spi_tegra_probe(struct platform_device *pdev)
 	tspi->rx_dma_req.req_sel = spi_tegra_req_sels[pdev->id];
 	tspi->rx_dma_req.dev = tspi;
 
-	master->dev.of_node = pdev->dev.of_node;
 	ret = spi_register_master(master);
 
 	if (ret < 0)

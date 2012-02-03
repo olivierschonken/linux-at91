@@ -556,6 +556,7 @@ struct spi_master *spi_alloc_master(struct device *dev, unsigned size)
 	master->dev.class = &spi_master_class;
 	master->dev.parent = get_device(dev);
 	spi_master_set_devdata(master, &master[1]);
+	master->dev.of_node = dev->of_node;
 
 	return master;
 }

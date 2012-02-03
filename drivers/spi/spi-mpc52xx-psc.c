@@ -398,7 +398,6 @@ static int __devinit mpc52xx_psc_spi_do_probe(struct device *dev, u32 regaddr,
 	master->setup = mpc52xx_psc_spi_setup;
 	master->transfer = mpc52xx_psc_spi_transfer;
 	master->cleanup = mpc52xx_psc_spi_cleanup;
-	master->dev.of_node = dev->of_node;
 
 	mps->psc = ioremap(regaddr, size);
 	if (!mps->psc) {

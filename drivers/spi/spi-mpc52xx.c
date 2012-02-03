@@ -437,7 +437,6 @@ static int __devinit mpc52xx_spi_probe(struct platform_device *op)
 	master->setup = mpc52xx_spi_setup;
 	master->transfer = mpc52xx_spi_transfer;
 	master->mode_bits = SPI_CPOL | SPI_CPHA | SPI_LSB_FIRST;
-	master->dev.of_node = op->dev.of_node;
 
 	dev_set_drvdata(&op->dev, master);
 

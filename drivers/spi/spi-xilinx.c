@@ -392,7 +392,6 @@ struct spi_master *xilinx_spi_init(struct device *dev, struct resource *mem,
 
 	master->bus_num = bus_num;
 	master->num_chipselect = num_cs;
-	master->dev.of_node = dev->of_node;
 
 	xspi->mem = *mem;
 	xspi->irq = irq;
