@@ -111,6 +111,15 @@
 
 			};
 
+			i2c-gpio@0 {
+				status = "okay";
+
+				rv3029c2@56 {
+					compatible = "rv3029c2";
+					reg = <0x56>;
+				};
+			};
+
 		};
 	};
 };
