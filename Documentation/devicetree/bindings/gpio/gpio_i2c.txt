@@ -1,0 +1,32 @@
+Device-Tree bindings for i2c gpio driver
+
+Required properties:
+	- compatible = "i2c-gpio";
+	- gpios: sda and scl gpio
+
+
+Optional properties:
+	- i2c-gpio,sda-open-drain: sda as open drain
+	- i2c-gpio,scl-open-drain: scl as open drain
+	- i2c-gpio,scl-output-only: scl as output only
+	- udelay: delay between GPIO operations (may depend on each platform)
+	- timeout: timeout to get data (ms)
+
+Example nodes:
+
+i2c-gpio@0 {
+	compatible = "i2c-gpio";
+	gpios = <&pioA 23 0 /* sda */
+		 &pioA 24 0 /* scl */
+		>;
+	i2c-gpio,sda-open-drain;
+	i2c-gpio,scl-open-drain;
+	udelay = <2>;		/* ~100 kHz */
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	rv3029c2@56 {
+		compatible = "rv3029c2";
+		reg = <0x56>;
+	};
+};
