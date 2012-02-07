@@ -686,6 +686,36 @@ int of_property_read_u64(const struct device_node *np, const char *propname,
 EXPORT_SYMBOL_GPL(of_property_read_u64);
 
 /**
+ * of_property_read_bool - Find and read a boolean from a property
+ * @np:		device node from which the property value is to be read.
+ * @propname:	name of the property to be searched.
+ *
+ * Search for a property in a device node and read a 32-bit value from
+ * it. Returns 0 if <0> or if the property does not exist, 1 if <1> or none.
+ *
+ * is-ok;	=> true
+ * is-ok = <1>;	=> true
+ * is-ok = <0>;	=> false
+ */
+int of_property_read_bool(const struct device_node *np, const char *propname)
+{
+	u32 reg;
+	int ret = of_property_read_u32(np, propname, &reg);
+
+	switch (ret) {
+	case -EINVAL:
+		return false;
+	case -ENODATA:
+		return true;
+	case 0:
+		return reg == 1;
+	default:
+		return ret;
+	}
+}
+EXPORT_SYMBOL_GPL(of_property_read_bool);
+
+/**
  * of_property_read_string - Find and read a string from a property
  * @np:		device node from which the property value is to be read.
  * @propname:	name of the property to be searched.

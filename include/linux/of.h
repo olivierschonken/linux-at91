@@ -210,6 +210,8 @@ extern int of_property_read_u32_array(const struct device_node *np,
 				      size_t sz);
 extern int of_property_read_u64(const struct device_node *np,
 				const char *propname, u64 *out_value);
+extern int of_property_read_bool(const struct device_node *np,
+				const char *propname);
 
 extern int of_property_read_string(struct device_node *np,
 				   const char *propname,
@@ -284,6 +286,12 @@ static inline struct property *of_find_property(const struct device_node *np,
 static inline int of_property_read_u32_array(const struct device_node *np,
 					     const char *propname,
 					     u32 *out_values, size_t sz)
+{
+	return -ENOSYS;
+}
+
+static inline int of_property_read_bool(const struct device_node *np,
+				const char *propname)
 {
 	return -ENOSYS;
 }
