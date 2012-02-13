@@ -122,7 +122,6 @@ struct gpio_chip {
 	unsigned		can_sleep:1;
 	unsigned		exported:1;
 
-#if defined(CONFIG_OF_GPIO)
 	/*
 	 * If CONFIG_OF is enabled, then all GPIO controllers described in the
 	 * device tree automatically may have an OF translation
@@ -131,7 +130,6 @@ struct gpio_chip {
 	int of_gpio_n_cells;
 	int (*of_xlate)(struct gpio_chip *gc,
 		        const struct of_phandle_args *gpiospec, u32 *flags);
-#endif
 };
 
 extern const char *gpiochip_is_requested(struct gpio_chip *chip,
