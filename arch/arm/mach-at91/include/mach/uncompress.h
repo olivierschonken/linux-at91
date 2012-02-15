@@ -93,6 +93,54 @@ static const u32 uarts_sam9x5[] = {
 	0,
 };
 
+#ifdef DEBUG
+static void putc(int c);
+
+static void debug_set()
+{
+	at91_uart = (void __iomem *)AT91_BASE_DBGU0;
+}
+
+static void debug_putc_u32(u32 val)
+{
+	int i;
+	u8 val8;
+
+	debug_set();
+	putc('0');
+	putc('x');
+	for (i = 7 * 4; i >= 0; i-= 4) {
+		val8 = ((val >> i) & 0xf);
+
+		if (val8 > 10)
+			putc(val8 - 10 + 'a');
+		else
+			putc(val8 + '0');
+	}
+}
+
+static void debug_puts(const char *ptr)
+{
+	char c;
+
+	debug_set();
+	while ((c = *ptr++) != '\0') {
+		if (c == '\n')
+			putc('\r');
+		putc(c);
+	}
+}
+
+static void debug_putc(int c)
+{
+	putc(c);
+}
+#else
+static void debug_putc(int c) {}
+static void debug_putc_u32(u32 val) {}
+static void debug_puts(const char *ptr) {}
+#endif
+
 static inline const u32* decomp_soc_detect(u32 dbgu_base, u32* sram_base)
 {
 	u32 cidr, socid;
@@ -100,39 +148,52 @@ static inline const u32* decomp_soc_detect(u32 dbgu_base, u32* sram_base)
 	cidr = __raw_readl(dbgu_base + AT91_DBGU_CIDR);
 	socid = cidr & ~AT91_CIDR_VERSION;
 
+	debug_putc_u32(dbgu_base);
+	debug_putc('\n');
+	debug_putc_u32(cidr);
+	debug_putc('\n');
+
 	switch (socid) {
 	case ARCH_ID_AT91RM9200:
+		debug_puts("rm9200\n");
 		*sram_base = AT91RM9200_SRAM_BASE +
 			     AT91RM9200_SRAM_SIZE - 8;
 		return uarts_rm9200;
 
 	case ARCH_ID_AT91SAM9G20:
+		debug_puts("sam9g20\n");
 	case ARCH_ID_AT91SAM9260:
+		debug_puts("sam9260\n");
 		*sram_base = AT91SAM9260_SRAM_BASE +
 			     AT91SAM9260_SRAM_SIZE - 8;
 		return uarts_sam9260;
 
 	case ARCH_ID_AT91SAM9261:
+		debug_puts("sam9261\n");
 		*sram_base = AT91SAM9261_SRAM_BASE +
 			     AT91SAM9261_SRAM_SIZE - 8;
 		return uarts_sam9261;
 
 	case ARCH_ID_AT91SAM9263:
+		debug_puts("sam9263\n");
 		*sram_base = AT91SAM9263_SRAM0_BASE +
 			     AT91SAM9263_SRAM0_SIZE - 8;
 		return uarts_sam9263;
 
 	case ARCH_ID_AT91SAM9G45:
+		debug_puts("sam9g45\n");
 		*sram_base = AT91SAM9G45_SRAM_BASE +
 			     AT91SAM9G45_SRAM_SIZE - 8;
 		return uarts_sam9g45;
 
 	case ARCH_ID_AT91SAM9RL64:
+		debug_puts("sam9rl\n");
 		*sram_base = AT91SAM9RL_SRAM_BASE +
 			     AT91SAM9RL_SRAM_SIZE - 8;
 		return uarts_sam9rl;
 
 	case ARCH_ID_AT91SAM9X5:
+		debug_puts("sam9x5\n");
 		*sram_base = AT91SAM9X5_SRAM_BASE +
 			     AT91SAM9X5_SRAM_SIZE - 8;
 		return uarts_sam9x5;
@@ -140,12 +201,14 @@ static inline const u32* decomp_soc_detect(u32 dbgu_base, u32* sram_base)
 
 	/* at91sam9g10 */
 	if ((cidr & ~AT91_CIDR_EXT) == ARCH_ID_AT91SAM9G10) {
+		debug_puts("sam9g10\n");
 		*sram_base = AT91SAM9261_SRAM_BASE +
 			     AT91SAM9261_SRAM_SIZE - 8;
 		return uarts_sam9261;
 	}
 	/* at91sam9xe */
 	else if ((cidr & AT91_CIDR_ARCH) == ARCH_FAMILY_AT91SAM9XE) {
+		debug_puts("sam9xe\n");
 		*sram_base = AT91SAM9260_SRAM_BASE +
 			     AT91SAM9260_SRAM_SIZE - 8;
 		return uarts_sam9260;
@@ -172,16 +235,24 @@ static inline void arch_decomp_setup(void)
 	}
 
 	if (__raw_readl((void __iomem *)sram_base) == UART_BOOT_MAGIC) {
+		debug_puts("Found uart base = ");
 		at91_uart = (void __iomem *)__raw_readl((void __iomem *)sram_base + 4);
+		debug_putc_u32((u32)at91_uart);
+		debug_putc('\n');
 		return;
 	}
 
 	do {
+		debug_putc_u32(i);
+		debug_putc('\n');
 		/* physical address */
+		debug_putc_u32(usarts[i]);
+		debug_putc('\n');
 		at91_uart = (void __iomem *)usarts[i];
 
 		if (__raw_readl(at91_uart + ATMEL_US_BRGR))
 			return;
+
 		i++;
 	} while (usarts[i]);
 
