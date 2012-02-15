@@ -102,6 +102,12 @@ config ARCH_AT91SAM9G45
 	select HAVE_AT91_DBGU1
 	select AT91_SAM9G45_RESET
 
+config ARCH_AT91X40
+	bool "AT91x40"
+	select ARCH_USES_GETTIMEOFFSET
+
+endchoice
+
 config ARCH_AT91SAM9X5
 	bool "AT91SAM9x5 family"
 	select CPU_ARM926T
@@ -110,12 +116,7 @@ config ARCH_AT91SAM9X5
 	select HAVE_NET_MACB
 	select HAVE_AT91_DBGU0
 	select AT91_SAM9G45_RESET
-
-config ARCH_AT91X40
-	bool "AT91x40"
-	select ARCH_USES_GETTIMEOFFSET
-
-endchoice
+	select USE_OF
 
 config AT91_PMC_UNIT
 	bool
