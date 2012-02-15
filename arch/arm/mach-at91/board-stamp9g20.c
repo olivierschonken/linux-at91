@@ -28,6 +28,7 @@
 #include <mach/board.h>
 #include <mach/at91sam9_smc.h>
 
+#include "stamp9g20.h"
 #include "sam9_smc.h"
 #include "generic.h"
 
