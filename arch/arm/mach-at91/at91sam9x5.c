@@ -299,6 +299,11 @@ static void __init at91sam9x5_map_io(void)
 	at91_init_sram(0, AT91SAM9X5_SRAM_BASE, AT91SAM9X5_SRAM_SIZE);
 }
 
+static int of_at91sam926x_pit_init(void)
+{
+	return 0;
+}
+
 static void __init at91sam9x5_ioremap_registers(void)
 {
 	if (of_at91sam926x_pit_init() < 0)
@@ -306,7 +311,7 @@ static void __init at91sam9x5_ioremap_registers(void)
 	at91_ioremap_ramc(0, AT91SAM9X5_BASE_DDRSDRC0, 512);
 }
 
-void __init at91sam9x5_initialize(void)
+static void __init at91sam9x5_initialize(void)
 {
 	arm_pm_restart = at91sam9g45_restart;
 	at91_extern_irq = (1 << AT91SAM9X5_ID_IRQ0);
