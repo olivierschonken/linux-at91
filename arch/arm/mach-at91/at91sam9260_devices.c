@@ -718,14 +718,16 @@ static struct resource rtt_resources[] = {
 		.start	= AT91SAM9260_BASE_RTT,
 		.end	= AT91SAM9260_BASE_RTT + SZ_16 - 1,
 		.flags	= IORESOURCE_MEM,
-	}
+	}, {
+		.flags	= IORESOURCE_MEM,
+	},
 };
 
 static struct platform_device at91sam9260_rtt_device = {
 	.name		= "at91_rtt",
 	.id		= 0,
 	.resource	= rtt_resources,
-	.num_resources	= ARRAY_SIZE(rtt_resources),
+	.num_resources	= 1,
 };
 
 
@@ -733,6 +735,10 @@ static struct platform_device at91sam9260_rtt_device = {
 static void __init at91_add_device_rtt_rtc(void)
 {
 	at91sam9260_rtt_device.name = "rtc-at91sam9";
+	at91sam9260_rtt_device.num_resources++;
+	rtt_resources[1].start = AT91SAM9260_BASE_GPBR +
+				 4 * CONFIG_RTC_DRV_AT91SAM9_GPBR;
+	rtt_resources[1].end = rtt_resources[1].start + 3;
 }
 #else
 static void __init at91_add_device_rtt_rtc(void) {}
