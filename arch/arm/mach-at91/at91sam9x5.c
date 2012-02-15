@@ -304,7 +304,7 @@ static void __init at91sam9x5_map_io(void)
 	at91_init_sram(0, AT91SAM9X5_SRAM_BASE, AT91SAM9X5_SRAM_SIZE);
 }
 
-void __init at91sam9x5_initialize(void)
+static void __init at91sam9x5_initialize(void)
 {
 	at91_extern_irq = (1 << AT91SAM9X5_ID_IRQ0);
 
