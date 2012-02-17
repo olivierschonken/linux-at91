@@ -93,7 +93,7 @@ static const u32 uarts_sam9x5[] = {
 	0,
 };
 
-static inline const u32* decomp_soc_detect(u32 dbgu_base)
+static inline const u32* decomp_soc_detect(u32 dbgu_base, u32* sram_base)
 {
 	u32 cidr, socid;
 
@@ -102,51 +102,77 @@ static inline const u32* decomp_soc_detect(u32 dbgu_base)
 
 	switch (socid) {
 	case ARCH_ID_AT91RM9200:
+		*sram_base = AT91RM9200_SRAM_BASE +
+			     AT91RM9200_SRAM_SIZE - 8;
 		return uarts_rm9200;
 
 	case ARCH_ID_AT91SAM9G20:
 	case ARCH_ID_AT91SAM9260:
+		*sram_base = AT91SAM9260_SRAM_BASE +
+			     AT91SAM9260_SRAM_SIZE - 8;
 		return uarts_sam9260;
 
 	case ARCH_ID_AT91SAM9261:
+		*sram_base = AT91SAM9261_SRAM_BASE +
+			     AT91SAM9261_SRAM_SIZE - 8;
 		return uarts_sam9261;
 
 	case ARCH_ID_AT91SAM9263:
+		*sram_base = AT91SAM9263_SRAM0_BASE +
+			     AT91SAM9263_SRAM0_SIZE - 8;
 		return uarts_sam9263;
 
 	case ARCH_ID_AT91SAM9G45:
+		*sram_base = AT91SAM9G45_SRAM_BASE +
+			     AT91SAM9G45_SRAM_SIZE - 8;
 		return uarts_sam9g45;
 
 	case ARCH_ID_AT91SAM9RL64:
+		*sram_base = AT91SAM9RL_SRAM_BASE +
+			     AT91SAM9RL_SRAM_SIZE - 8;
 		return uarts_sam9rl;
 
 	case ARCH_ID_AT91SAM9X5:
+		*sram_base = AT91SAM9X5_SRAM_BASE +
+			     AT91SAM9X5_SRAM_SIZE - 8;
 		return uarts_sam9x5;
 	}
 
 	/* at91sam9g10 */
 	if ((cidr & ~AT91_CIDR_EXT) == ARCH_ID_AT91SAM9G10) {
+		*sram_base = AT91SAM9261_SRAM_BASE +
+			     AT91SAM9261_SRAM_SIZE - 8;
 		return uarts_sam9261;
 	}
 	/* at91sam9xe */
 	else if ((cidr & AT91_CIDR_ARCH) == ARCH_FAMILY_AT91SAM9XE) {
+		*sram_base = AT91SAM9260_SRAM_BASE +
+			     AT91SAM9260_SRAM_SIZE - 8;
 		return uarts_sam9260;
 	}
 
 	return NULL;
 }
 
+#define UART_BOOT_MAGIC 0x64656370	/* 'decp' */
+
 static inline void arch_decomp_setup(void)
 {
 	int i = 0;
 	const u32* usarts;
+	u32 sram_base;
 
-	usarts = decomp_soc_detect(AT91_BASE_DBGU0);
+	usarts = decomp_soc_detect(AT91_BASE_DBGU0, &sram_base);
 
 	if (!usarts)
-		usarts = decomp_soc_detect(AT91_BASE_DBGU1);
+		usarts = decomp_soc_detect(AT91_BASE_DBGU1, &sram_base);
 	if (!usarts) {
 		at91_uart = NULL;
+		return;
+	}
+
+	if (__raw_readl((void __iomem *)sram_base) == UART_BOOT_MAGIC) {
+		at91_uart = (void __iomem *)__raw_readl((void __iomem *)sram_base + 4);
 		return;
 	}
 
