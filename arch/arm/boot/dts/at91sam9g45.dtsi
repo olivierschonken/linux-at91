@@ -315,6 +315,21 @@
 			interrupts = <22 4>;
 			status = "disabled";
 		};
+
+		ssc0: scc@fff9c000 {
+			compatible = "atmel,at91rm9200-ssc";
+			reg = <0xfff9c000 0x4000>;
+			interrupts = <16 4>;
+			status = "disabled";
+		};
+
+		ssc1: scc@fffa0000 {
+			compatible = "atmel,at91rm9200-ssc";
+			reg = <0xfffa0000 0x4000>;
+			interrupts = <17 4>;
+			status = "disabled";
+		};
+
 	};
 
 	i2c@0 {
