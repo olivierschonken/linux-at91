@@ -825,7 +825,7 @@ static struct resource ssc0_resources[] = {
 };
 
 static struct platform_device at91sam9rl_ssc0_device = {
-	.name	= "ssc",
+	.name	= "atmel_ssc",
 	.id	= 0,
 	.dev	= {
 		.dma_mask		= &ssc0_dmamask,
@@ -867,7 +867,7 @@ static struct resource ssc1_resources[] = {
 };
 
 static struct platform_device at91sam9rl_ssc1_device = {
-	.name	= "ssc",
+	.name	= "atmel_ssc",
 	.id	= 1,
 	.dev	= {
 		.dma_mask		= &ssc1_dmamask,

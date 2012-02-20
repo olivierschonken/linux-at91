@@ -1607,21 +1607,21 @@ static struct resource ssc0_resource[] = {
 	PBMEM(0xffe01c00),
 	IRQ(10),
 };
-DEFINE_DEV(ssc, 0);
+DEFINE_DEV(atmel_ssc, 0);
 DEV_CLK(pclk, ssc0, pba, 7);
 
 static struct resource ssc1_resource[] = {
 	PBMEM(0xffe02000),
 	IRQ(11),
 };
-DEFINE_DEV(ssc, 1);
+DEFINE_DEV(atmel_ssc, 1);
 DEV_CLK(pclk, ssc1, pba, 8);
 
 static struct resource ssc2_resource[] = {
 	PBMEM(0xffe02400),
 	IRQ(12),
 };
-DEFINE_DEV(ssc, 2);
+DEFINE_DEV(atmel_ssc, 2);
 DEV_CLK(pclk, ssc2, pba, 9);
 
 struct platform_device *__init
@@ -1632,7 +1632,7 @@ at32_add_device_ssc(unsigned int id, unsigned int flags)
 
 	switch (id) {
 	case 0:
-		pdev = &ssc0_device;
+		pdev = &atmel_ssc0_device;
 		if (flags & ATMEL_SSC_RF)
 			pin_mask |= (1 << 21);	/* RF */
 		if (flags & ATMEL_SSC_RK)
@@ -1651,7 +1651,7 @@ at32_add_device_ssc(unsigned int id, unsigned int flags)
 
 		break;
 	case 1:
-		pdev = &ssc1_device;
+		pdev = &atmel_ssc1_device;
 		if (flags & ATMEL_SSC_RF)
 			pin_mask |= (1 << 0);	/* RF */
 		if (flags & ATMEL_SSC_RK)
@@ -1670,7 +1670,7 @@ at32_add_device_ssc(unsigned int id, unsigned int flags)
 
 		break;
 	case 2:
-		pdev = &ssc2_device;
+		pdev = &atmel_ssc2_device;
 		if (flags & ATMEL_SSC_TD)
 			pin_mask |= (1 << 13);	/* TD */
 		if (flags & ATMEL_SSC_RD)
