@@ -17,6 +17,8 @@
 #include <linux/atmel-ssc.h>
 #include <linux/slab.h>
 #include <linux/module.h>
+#include <linux/of.h>
+#include <linux/of_platform.h>
 
 /* Serialize access to ssc_list and user count */
 static DEFINE_SPINLOCK(user_lock);
@@ -151,11 +153,21 @@ static int __devexit ssc_remove(struct platform_device *pdev)
 	return 0;
 }
 
+#ifdef CONFIG_OF
+static const struct of_device_id atmel_ssc_dt_ids[] = {
+	{ .compatible = "atmel,at91rm9200-ssc" },
+	{ /* sentinel */ }
+};
+
+MODULE_DEVICE_TABLE(of, atmel_ssc_dt_ids);
+#endif
+
 static struct platform_driver ssc_driver = {
 	.remove		= __devexit_p(ssc_remove),
 	.driver		= {
 		.name		= "atmel_ssc",
 		.owner		= THIS_MODULE,
+		.of_match_table	= of_match_ptr(atmel_ssc_dt_ids),
 	},
 };
 

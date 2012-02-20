@@ -1,0 +1,14 @@
+* Atmel SSC
+
+Required properties:
+- compatible: Should be "atmel,at91rm9200-ssc"
+- reg: Should contain SSC registers location and length
+- interrupts : Should contain SSC interrupt
+
+Examples:
+
+ssc0: scc@fffbc000 {
+	compatible = "atmel,at91rm9200-ssc";
+	reg = <0xfffbc000 0x4000>;
+	interrupts = <14 4>;
+};
