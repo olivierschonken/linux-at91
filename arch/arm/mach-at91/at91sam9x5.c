@@ -301,6 +301,7 @@ static void __init at91sam9x5_map_io(void)
 
 static void __init at91sam9x5_ioremap_registers(void)
 {
+	at91sam9_ioremap_smc(0, 0xffffea00);
 }
 
 void __init at91sam9x5_initialize(void)
