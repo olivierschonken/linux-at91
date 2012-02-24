@@ -25,11 +25,6 @@
 #include <linux/mmc/core.h>
 #include <linux/mmc/host.h>
 
-/* For archs that don't support NO_IRQ (such as mips), provide a dummy value */
-#ifndef NO_IRQ
-#define NO_IRQ 0
-#endif
-
 MODULE_LICENSE("GPL");
 
 enum {
@@ -146,7 +141,7 @@ struct mmc_spi_platform_data *mmc_spi_get_pdata(struct spi_device *spi)
 		oms->pdata.get_ro = of_mmc_spi_get_ro;
 
 	oms->detect_irq = irq_of_parse_and_map(np, 0);
-	if (oms->detect_irq != NO_IRQ) {
+	if (oms->detect_irq > 0) {
 		oms->pdata.init = of_mmc_spi_init;
 		oms->pdata.exit = of_mmc_spi_exit;
 	} else {
