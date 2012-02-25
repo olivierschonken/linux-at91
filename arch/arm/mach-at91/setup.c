@@ -52,6 +52,19 @@ void __init at91_init_interrupts(unsigned int *priority)
 	at91_gpio_irq_setup();
 }
 
+void __iomem *at91_ramc_base[2];
+
+void __init at91_ioremap_ramc(int id, u32 addr, u32 size)
+{
+	if (id < 0 || id > 1) {
+		pr_emerg("Wrong RAM controller id (%d), cannot continue\n", id);
+		BUG();
+	}
+	at91_ramc_base[id] = ioremap(addr, size);
+	if (!at91_ramc_base[id])
+		panic("Impossible to ioremap ramc.%d 0x%x\n", id, addr);
+}
+
 static struct map_desc sram_desc[2] __initdata;
 
 void __init at91_init_sram(int bank, unsigned long base, unsigned int length)
