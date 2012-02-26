@@ -47,6 +47,7 @@ static void __init at91_dt_device_init(void)
 }
 
 static const char *at91_dt_board_compat[] __initdata = {
+	"atmel,at91sam9263ek",
 	"atmel,at91sam9g20ek",
 	"atmel,at91sam9g20ek_2mmc",
 	"atmel,at91sam9m10g45ek",
