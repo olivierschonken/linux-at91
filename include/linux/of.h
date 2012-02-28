@@ -202,6 +202,8 @@ extern struct device_node *of_find_node_with_property(
 extern struct property *of_find_property(const struct device_node *np,
 					 const char *name,
 					 int *lenp);
+extern int of_property_count_byte_array(const struct device_node *np,
+			                const char *propname, int size);
 extern int of_property_read_u32_array(const struct device_node *np,
 				      const char *propname,
 				      u32 *out_values,
@@ -323,6 +325,12 @@ static inline struct device_node *of_find_compatible_node(
 	return NULL;
 }
 
+static inline int of_property_count_byte_array(const struct device_node *np,
+					       const char *propname, int size)
+{
+	return -ENOSYS;
+}
+
 static inline int of_property_read_u32_array(const struct device_node *np,
 					     const char *propname,
 					     u32 *out_values, size_t sz)
@@ -431,5 +439,17 @@ static inline int of_property_read_u64(const struct device_node *np,
 				       u64 *out_value)
 {
 	return of_property_read_u64_array(np, propname, out_value, 1);
+}
+
+static inline int of_property_count_u32_array(const struct device_node *np,
+			                      const char *propname)
+{
+	return of_property_count_byte_array(np, propname, sizeof(u32));
+}
+
+static inline int of_property_count_u64_array(const struct device_node *np,
+			                      const char *propname)
+{
+	return of_property_count_byte_array(np, propname, sizeof(u64));
 }
 #endif /* _LINUX_OF_H */

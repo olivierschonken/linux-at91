@@ -621,6 +621,31 @@ struct device_node *of_find_node_by_phandle(phandle handle)
 EXPORT_SYMBOL(of_find_node_by_phandle);
 
 /**
+ * of_property_count_byte_array - Find and return the number of x bytes
+ * word from a property.
+ * @np:		device node from which the property value is to be read.
+ * @propname:	name of the property to be searched.
+ * @size:	data size in byte.
+ *
+ * Search for a property in a device tree node and retrieve the number of
+ * x bytes word contain in it. Returns the number of x bytes word on
+ * success, -EINVAL if the property does not exist, -ENODATA if property
+ * does not have a value.
+ */
+int of_property_count_byte_array(const struct device_node *np,
+			         const char *propname, int size)
+{
+	struct property *prop = of_find_property(np, propname, NULL);
+
+	if (!prop)
+		return -EINVAL;
+	if (!prop->value)
+		return 0;
+	return prop->length / size;
+}
+EXPORT_SYMBOL_GPL(of_property_count_byte_array);
+
+/**
  * of_property_read_u32_array - Find and read an array of 32 bit integers
  * from a property.
  *
@@ -676,7 +701,7 @@ int of_property_read_u64_array(const struct device_node *np,
 			       size_t sz)
 {
 	struct property *prop = of_find_property(np, propname, NULL);
-	const __be64 *val;
+	const __be32 *val;
 
 	if (!prop)
 		return -EINVAL;
@@ -686,8 +711,10 @@ int of_property_read_u64_array(const struct device_node *np,
 		return -EOVERFLOW;
 
 	val = prop->value;
-	while (sz--)
-		*out_values++ = of_read_number(val++, 2);
+	while (sz--) {
+		*out_values++ = of_read_number(val, 2);
+		val += 2;
+	}
 	return 0;
 }
 EXPORT_SYMBOL_GPL(of_property_read_u64_array);
