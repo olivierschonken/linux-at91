@@ -30,6 +30,7 @@
 #include <linux/of_irq.h>
 #include <linux/irqdomain.h>
 #include <linux/err.h>
+#include <linux/slab.h>
 
 #include <mach/hardware.h>
 #include <asm/irq.h>
@@ -185,6 +186,9 @@ static struct irq_domain_ops at91_aic_irq_ops = {
 int __init at91_aic_of_init(struct device_node *node,
 				     struct device_node *parent)
 {
+	u32 *tmp;
+	int nb, i;
+
 	at91_aic_base = of_iomap(node, 0);
 	at91_aic_np = node;
 
@@ -192,6 +196,24 @@ int __init at91_aic_of_init(struct device_node *node,
 						&at91_aic_irq_ops, NULL);
 	if (!at91_aic_domain)
 		panic("Unable to add AIC irq domain (DT)\n");
+
+
+	nb = of_property_count_u32_array(node, "atmel,external-irqs");
+	if (nb < 0 || nb > 31)
+		panic("AIC: external irq error < 0 or > 31 (%d)\n", nb);
+
+	tmp = kzalloc(sizeof(u32) * nb, GFP_KERNEL);
+	if (!tmp)
+		panic("AIC: can't alloc array for external irqs\n");
+
+	if (of_property_read_u32_array(node, "atmel,external-irqs", tmp, nb))
+		panic("AIC: unable to read %d external irq(s)\n", nb);
+
+	at91_extern_irq = 0;
+	for (i = 0; i < nb; i++)
+		at91_extern_irq |= (1 << tmp[i]);
+
+	kfree(tmp);
 
 	irq_set_default_host(at91_aic_domain);
 
