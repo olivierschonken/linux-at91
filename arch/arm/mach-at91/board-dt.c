@@ -1,12 +1,10 @@
 /*
- *  Setup code for AT91SAM Evaluation Kits with Device Tree support
+ * Setup code for AT91SAM Evaluation Kits with Device Tree support
  *
- *  Covers: * AT91SAM9G45-EKES  board
- *          * AT91SAM9M10-EKES  board
- *          * AT91SAM9M10G45-EK board
+ * Copyright (C) 2011-2012 Atmel,
+ *		 2011-2012 Nicolas Ferre <nicolas.ferre@atmel.com>
  *
- *  Copyright (C) 2011 Atmel,
- *                2011 Nicolas Ferre <nicolas.ferre@atmel.com>
+ * Copyright (C) 2011-2012 Jean-Christophe PLAGNIOL-VILLARD <plagnioj@jcrosoft.com>
  *
  * Licensed under GPLv2 or later.
  */
@@ -49,9 +47,7 @@ static void __init at91_dt_device_init(void)
 }
 
 static const char *at91_dt_board_compat[] __initdata = {
-	"atmel,at91sam9m10g45ek",
-	"atmel,at91sam9x5ek",
-	"calao,usb-a9g20",
+	"atmel,at91sam9",
 	NULL
 };
 
