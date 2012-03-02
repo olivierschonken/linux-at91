@@ -315,12 +315,33 @@ static void at91_dt_rstc(void)
 	of_node_put(np);
 }
 
+static struct of_device_id ramc_ids[] = {
+	{ .compatible = "atmel,at91sam9260-sdramc" },
+	{ .compatible = "atmel,at91sam9g45-ddramc" },
+	{ /*sentinel*/ }
+};
+
+static void at91_dt_ramc(void)
+{
+	struct device_node *np;
+
+	np = of_find_matching_node(NULL, ramc_ids);
+	if (!np)
+		panic("unable to find compatible ram conroller node in dtb\n");
+
+	at91_ramc_base[0] = of_iomap(np, 0);
+	if (!at91_ramc_base[0])
+		panic("unable to map ramc[0] cpu registers\n");
+	/* the controller may have 2 banks */
+	at91_ramc_base[1] = of_iomap(np, 1);
+
+	of_node_put(np);
+}
+
 void __init at91_dt_initialize(void)
 {
 	at91_dt_rstc();
-
-	/* temporary until have the ramc binding*/
-	at91_boot_soc.ioremap_registers();
+	at91_dt_ramc();
 
 	/* Init clock subsystem */
 	at91_dt_clock_init();
