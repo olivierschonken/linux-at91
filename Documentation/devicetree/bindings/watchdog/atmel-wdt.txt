@@ -1,0 +1,12 @@
+* Atmel Watchdog Timer (WDT) Controller
+
+Required properties:
+- compatible : Should be "atmel,at91sam9260-wdt"
+- reg : Should contain WDT registers location and length
+
+Examples:
+
+wdt@fffffd40 {
+	compatible = "atmel,at91sam9260-wdt";
+	reg = <0xfffffd40 0x10>;
+};
