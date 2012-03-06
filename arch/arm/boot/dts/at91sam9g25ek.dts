@@ -32,6 +32,11 @@
 				phy-mode = "rmii";
 				status = "okay";
 			};
+
+			usb2: gadget@f803c000 {
+				atmel,vbus-gpio = <&pioB 16 0>;
+				status = "okay";
+			};
 		};
 
 		usb0: ohci@00600000 {
