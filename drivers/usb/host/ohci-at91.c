@@ -493,8 +493,6 @@ static const struct of_device_id at91_ohci_dt_ids[] = {
 
 MODULE_DEVICE_TABLE(of, at91_ohci_dt_ids);
 
-static u64 at91_ohci_dma_mask = DMA_BIT_MASK(32);
-
 static int __devinit ohci_at91_of_init(struct platform_device *pdev)
 {
 	struct device_node *np = pdev->dev.of_node;
@@ -505,13 +503,6 @@ static int __devinit ohci_at91_of_init(struct platform_device *pdev)
 
 	if (!np)
 		return 0;
-
-	/* Right now device-tree probed devices don't get dma_mask set.
-	 * Since shared usb code relies on it, set it here for now.
-	 * Once we have dma capability bindings this can go away.
-	 */
-	if (!pdev->dev.dma_mask)
-		pdev->dev.dma_mask = &at91_ohci_dma_mask;
 
 	pdata = devm_kzalloc(&pdev->dev, sizeof(*pdata), GFP_KERNEL);
 	if (!pdata)
