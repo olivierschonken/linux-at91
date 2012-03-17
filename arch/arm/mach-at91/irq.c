@@ -183,6 +183,33 @@ static struct irq_domain_ops at91_aic_irq_ops = {
 	.xlate	= irq_domain_xlate_twocell,
 };
 
+static void __init at91_aic_of_priority(struct device_node *node)
+{
+	u32 *tmp;
+	int nb, i;
+
+	nb = of_property_count_u32_array(node, "atmel,default-irq-priorities");
+
+	if (nb < 1) {
+		pr_warn("AIC: no valid default irqs priorities\n");
+		return;
+	}
+
+	tmp = kzalloc(sizeof(u32) * nb, GFP_KERNEL);
+	if (!tmp)
+		panic("AIC: can't alloc array for default irqs priorities\n");
+
+	of_property_read_u32_array(node, "atmel,default-irq-priorities", tmp, nb);
+
+	for (i = 0; i < nb; i++) {
+		/* Put hardware irq number in Source Vector Register: */
+		at91_aic_write(AT91_AIC_SVR(i), i);
+		/* Active Low interrupt, with the specified priority */
+		at91_aic_write(AT91_AIC_SMR(i), AT91_AIC_SRCTYPE_LOW | tmp[i]);
+	}
+	kfree(tmp);
+}
+
 int __init at91_aic_of_init(struct device_node *node,
 				     struct device_node *parent)
 {
@@ -214,6 +241,8 @@ int __init at91_aic_of_init(struct device_node *node,
 		at91_extern_irq |= (1 << tmp[i]);
 
 	kfree(tmp);
+
+	at91_aic_of_priority(node);
 
 	irq_set_default_host(at91_aic_domain);
 
