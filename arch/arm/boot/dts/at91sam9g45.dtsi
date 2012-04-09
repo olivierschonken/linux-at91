@@ -58,6 +58,40 @@
 				interrupt-controller;
 				reg = <0xfffff000 0x200>;
 				atmel,external-irqs = <31>;
+				atmel,default-irq-priorities = <
+					7	/* Advanced Interrupt Controller (FIQ) */
+					7	/* System Peripherals */
+					1	/* Parallel IO Controller A */
+					1	/* Parallel IO Controller B */
+					1	/* Parallel IO Controller C */
+					1	/* Parallel IO Controller D and E */
+					0
+					5	/* USART 0 */
+					5	/* USART 1 */
+					5	/* USART 2 */
+					5	/* USART 3 */
+					0	/* Multimedia Card Interface 0 */
+					6	/* Two-Wire Interface 0 */
+					6	/* Two-Wire Interface 1 */
+					5	/* Serial Peripheral Interface 0 */
+					5	/* Serial Peripheral Interface 1 */
+					4	/* Serial Synchronous Controller 0 */
+					4	/* Serial Synchronous Controller 1 */
+					0	/* Timer Counter 0, 1, 2, 3, 4 and 5 */
+					0	/* Pulse Width Modulation Controller */
+					0	/* Touch Screen Controller */
+					0	/* DMA Controller */
+					2	/* USB Host High Speed port */
+					3	/* LDC Controller */
+					5	/* AC97 Controller */
+					3	/* Ethernet */
+					0	/* Image Sensor Interface */
+					2	/* USB Device High speed port */
+					0
+					0	/* Multimedia Card Interface 1 */
+					0
+					0	/* Advanced Interrupt Controller (IRQ0) */
+				>;
 			};
 
 			ramc0: ramc@ffffe400 {

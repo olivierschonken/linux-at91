@@ -57,6 +57,40 @@
 				interrupt-controller;
 				reg = <0xfffff000 0x200>;
 				atmel,external-irqs = <29 30 31>;
+				atmel,default-irq-priorities = <
+					7	/* Advanced Interrupt Controller */
+					7	/* System Peripherals */
+					1	/* Parallel IO Controller A */
+					1	/* Parallel IO Controller B */
+					1	/* Parallel IO Controller C */
+					0	/* Analog-to-Digital Converter */
+					5	/* USART 0 */
+					5	/* USART 1 */
+					5	/* USART 2 */
+					0	/* Multimedia Card Interface */
+					2	/* USB Device Port */
+					6	/* Two-Wire Interface */
+					5	/* Serial Peripheral Interface 0 */
+					5	/* Serial Peripheral Interface 1 */
+					5	/* Serial Synchronous Controller */
+					0
+					0
+					0	/* Timer Counter 0 */
+					0	/* Timer Counter 1 */
+					0	/* Timer Counter 2 */
+					2	/* USB Host port */
+					3	/* Ethernet */
+					0	/* Image Sensor Interface */
+					5	/* USART 3 */
+					5	/* USART 4 */
+					5	/* USART 5 */
+					0	/* Timer Counter 3 */
+					0	/* Timer Counter 4 */
+					0	/* Timer Counter 5 */
+					0	/* Advanced Interrupt Controller */
+					0	/* Advanced Interrupt Controller */
+					0	/* Advanced Interrupt Controller */
+				>;
 			};
 
 			ramc0: ramc@ffffea00 {
