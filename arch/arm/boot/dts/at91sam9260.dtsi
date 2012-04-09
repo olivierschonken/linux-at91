@@ -202,6 +202,24 @@
 				interrupts = <10 4>;
 				status = "disabled";
 			};
+
+			spi0: spi@fffc8000 {
+				#address-cells = <1>;
+				#size-cells = <0>;
+				compatible = "atmel,at91rm9200-spi";
+				reg = <0xfffc8000 0x4000>;
+				interrupts = <12 4>;
+				status = "disabled";
+			};
+
+			spi1: spi@fffcc000 {
+				#address-cells = <1>;
+				#size-cells = <0>;
+				compatible = "atmel,at91rm9200-spi";
+				reg = <0xfffcc000 0x4000>;
+				interrupts = <13 4>;
+				status = "disabled";
+			};
 		};
 
 		nand0: nand@40000000 {
