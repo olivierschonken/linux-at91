@@ -16,6 +16,8 @@ Required properties:
       Default flag for internal sources should be set to 4 (active high).
 - reg: Should contain AIC registers location and length
 - atmel,external-irqs: u32 array of external irqs.
+- atmel,default-irq-priorities: u32 array of default irq priorities. This need
+  to contain all the irq.
 
 Examples:
 	/*
