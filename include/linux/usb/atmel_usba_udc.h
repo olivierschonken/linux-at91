@@ -18,6 +18,7 @@ struct usba_platform_data {
 	int			vbus_pin_inverted;
 	int			num_ep;
 	struct usba_ep_data	ep[0];
+	void 			(*toggle_bias)(int is_on);
 };
 
 #endif /* __LINUX_USB_USBA_H */

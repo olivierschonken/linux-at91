@@ -72,6 +72,16 @@ void __init at91_add_device_hdmac(void) {}
 
 #if defined(CONFIG_USB_ATMEL_USBA) || defined(CONFIG_USB_ATMEL_USBA_MODULE)
 
+static void toggle_bias(int is_on)
+{
+	unsigned int uckr = at91_pmc_read(AT91_CKGR_UCKR);
+
+	if (is_on)
+		at91_pmc_write(AT91_CKGR_UCKR, uckr | AT91_PMC_BIASEN);
+	else
+		at91_pmc_write(AT91_CKGR_UCKR, uckr & ~(AT91_PMC_BIASEN));
+}
+
 static struct resource usba_udc_resources[] = {
 	[0] = {
 		.start	= AT91SAM9RL_UDPHS_FIFO,
@@ -147,6 +157,8 @@ void __init at91_add_device_usba(struct usba_platform_data *data)
 		at91_set_deglitch(data->vbus_pin, 1);
 		usba_udc_data.pdata.vbus_pin = data->vbus_pin;
 	}
+
+	usba_udc_data.pdata.toggle_bias = toggle_bias;
 
 	/* Pullup pin is handled internally by USB device peripheral */
 
