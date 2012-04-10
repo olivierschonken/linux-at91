@@ -318,6 +318,8 @@ struct usba_udc {
 	void __iomem *regs;
 	void __iomem *fifo;
 
+	void (*toggle_bias)(int is_on);
+
 	struct usb_gadget gadget;
 	struct usb_gadget_driver *driver;
 	struct platform_device *pdev;
