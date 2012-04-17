@@ -18,5 +18,7 @@ endif
 dtb-$(CONFIG_MACH_AT91SAM_DT) += usb_a9g20.dtb
 # sam9g45
 dtb-$(CONFIG_MACH_AT91SAM_DT) += at91sam9m10g45ek.dtb
+# sam9n12
+dtb-$(CONFIG_MACH_AT91SAM_DT) += at91sam9n12ek.dtb
 # sam9x5
 dtb-$(CONFIG_MACH_AT91SAM_DT) += at91sam9g25ek.dtb
