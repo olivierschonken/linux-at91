@@ -705,9 +705,8 @@ static void atmci_dma_complete(void *arg)
 
 	dev_vdbg(&host->pdev->dev, "DMA complete\n");
 
-	if (host->caps.has_dma)
-		/* Disable DMA hardware handshaking on MCI */
-		atmci_writel(host, ATMCI_DMA, atmci_readl(host, ATMCI_DMA) & ~ATMCI_DMAEN);
+	/* Disable DMA hardware handshaking on MCI */
+	atmci_writel(host, ATMCI_DMA, atmci_readl(host, ATMCI_DMA) & ~ATMCI_DMAEN);
 
 	atmci_dma_cleanup(host);
 
@@ -868,8 +867,7 @@ atmci_prepare_data_dma(struct atmel_mci *host, struct mmc_data *data)
 	if (!chan)
 		return -ENODEV;
 
-	if (host->caps.has_dma)
-		atmci_writel(host, ATMCI_DMA, ATMCI_DMA_CHKSIZE(3) | ATMCI_DMAEN);
+	atmci_writel(host, ATMCI_DMA, ATMCI_DMA_CHKSIZE(3) | ATMCI_DMAEN);
 
 	if (data->flags & MMC_DATA_READ) {
 		direction = DMA_FROM_DEVICE;
